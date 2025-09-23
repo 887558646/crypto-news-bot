@@ -4,7 +4,7 @@ const priceService = require('./priceService');
 
 class ChartService {
   constructor() {
-    this.baseUrl = config.apis.quickChart.baseUrl;
+    this.baseUrl = config.quickchart.baseUrl;
   }
 
   /**
