@@ -42,7 +42,8 @@ class InfoService {
           market_data: true,
           community_data: false,
           developer_data: false,
-          sparkline: false
+          sparkline: false,
+          x_cg_demo_api_key: config.coingecko.apiKey
         }
       });
 

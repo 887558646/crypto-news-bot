@@ -17,6 +17,7 @@ module.exports = {
     baseUrl: 'https://api.coingecko.com/api/v3',
     priceEndpoint: '/simple/price',
     chartEndpoint: '/coins',
+    apiKey: process.env.COINGECKO_API_KEY,
   },
   quickchart: {
     baseUrl: 'https://quickchart.io',

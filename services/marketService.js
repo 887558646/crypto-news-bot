@@ -12,7 +12,11 @@ class MarketService {
    */
   async getMarketOverview() {
     try {
-      const response = await axios.get(`${this.baseUrl}/global`);
+      const response = await axios.get(`${this.baseUrl}/global`, {
+        params: {
+          x_cg_demo_api_key: config.coingecko.apiKey
+        }
+      });
       
       if (response.data.data) {
         const data = response.data.data;
@@ -38,7 +42,11 @@ class MarketService {
    */
   async getTrendingCoins() {
     try {
-      const response = await axios.get(`${this.baseUrl}/search/trending`);
+      const response = await axios.get(`${this.baseUrl}/search/trending`, {
+        params: {
+          x_cg_demo_api_key: config.coingecko.apiKey
+        }
+      });
       
       if (response.data.coins) {
         return response.data.coins.map(coin => ({

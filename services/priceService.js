@@ -64,7 +64,8 @@ class PriceService {
           vs_currencies: 'usd,twd',
           include_24hr_change: true,
           include_24hr_vol: true,
-          include_market_cap: true
+          include_market_cap: true,
+          x_cg_demo_api_key: config.coingecko.apiKey
         }
       });
 
@@ -94,7 +95,8 @@ class PriceService {
           vs_currencies: 'usd,twd',
           include_24hr_change: true,
           include_24hr_vol: true,
-          include_market_cap: true
+          include_market_cap: true,
+          x_cg_demo_api_key: config.coingecko.apiKey
         }
       });
 
@@ -232,7 +234,8 @@ class PriceService {
       const response = await axios.get(`${this.baseUrl}${this.chartEndpoint}/${coinGeckoId}/market_chart`, {
         params: {
           vs_currency: 'usd',
-          days: days
+          days: days,
+          x_cg_demo_api_key: config.coingecko.apiKey
         }
       });
 
