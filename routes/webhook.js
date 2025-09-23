@@ -3,6 +3,7 @@ const line = require('@line/bot-sdk');
 const config = require('../config');
 const newsService = require('../services/newsService');
 const priceService = require('../services/priceService');
+const marketService = require('../services/marketService');
 
 const router = express.Router();
 
@@ -86,13 +87,19 @@ async function handleEvent(event) {
       return await handleUnsubscribeCommand(event, userId);
     } else if (messageText === '/help') {
       return await handleHelpCommand(event);
-    } else if (messageText === '/status') {
-      return await handleStatusCommand(event, userId);
-    } else if (isValidCoinSymbol(messageText)) {
-      return await handleCoinQuery(event, messageText);
-    } else {
-      return await handleDefaultMessage(event);
-    }
+         } else if (messageText === '/status') {
+           return await handleStatusCommand(event, userId);
+         } else if (messageText === '/market') {
+           return await handleMarketCommand(event);
+         } else if (messageText === '/trending') {
+           return await handleTrendingCommand(event);
+         } else if (messageText === '/feargreed') {
+           return await handleFearGreedCommand(event);
+         } else if (isValidCoinSymbol(messageText)) {
+           return await handleCoinQuery(event, messageText);
+         } else {
+           return await handleDefaultMessage(event);
+         }
   } catch (error) {
     console.error('處理訊息錯誤:', error);
     return client.replyMessage(event.replyToken, {
@@ -158,17 +165,22 @@ async function handleHelpCommand(event) {
      const helpText = `🤖 Crypto News Bot 使用說明
 
      📊 查詢價格：
-     直接輸入幣種代號 (btc, eth, sol, bnb, sui)
+     直接輸入幣種代號 (${config.supportedCoins.slice(0, 5).join(', ')}...)
 
      📰 訂閱功能：
      /subscribe [幣種] - 訂閱特定幣種新聞
      /unsubscribe - 取消訂閱
 
+     📈 市場功能：
+     /market - 全球市場總覽
+     /trending - 趨勢幣種
+     /feargreed - 恐懼貪婪指數
+
      ℹ️ 其他指令：
      /help - 顯示此說明
      /status - 查看訂閱狀態
 
-     支援的加密貨幣：
+     支援的加密貨幣 (市值前30大)：
      ${config.supportedCoins.map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
 
   return client.replyMessage(event.replyToken, {
@@ -288,6 +300,69 @@ function formatNewsMessage(news) {
   });
   
   return newsText.trim();
+}
+
+/**
+ * 處理市場總覽指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleMarketCommand(event) {
+  try {
+    const marketData = await marketService.getMarketOverview();
+    const marketText = marketService.formatMarketOverview(marketData);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: marketText
+    });
+  } catch (error) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取市場數據，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理趨勢幣種指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleTrendingCommand(event) {
+  try {
+    const trendingCoins = await marketService.getTrendingCoins();
+    const trendingText = marketService.formatTrendingCoins(trendingCoins);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: trendingText
+    });
+  } catch (error) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取趨勢數據，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理恐懼貪婪指數指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleFearGreedCommand(event) {
+  try {
+    const fearGreedData = await marketService.getFearGreedIndex();
+    const fearGreedText = marketService.formatFearGreedIndex(fearGreedData);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: fearGreedText
+    });
+  } catch (error) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取恐懼貪婪指數，請稍後再試。'
+    });
+  }
 }
 
 /**

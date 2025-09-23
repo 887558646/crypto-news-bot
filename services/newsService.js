@@ -100,16 +100,20 @@ class NewsService {
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       const fromDate = oneDayAgo.toISOString().split('T')[0];
 
+      console.log(`🔍 搜尋新聞: ${keyword}, 日期: ${fromDate}`);
+
       const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
         params: {
           q: keyword,
-          language: 'zh',
+          language: 'en', // 改為英文，中文新聞較少
           sortBy: 'publishedAt',
           from: fromDate,
           apiKey: this.apiKey,
           pageSize: count,
         },
       });
+
+      console.log(`📰 找到 ${response.data.articles?.length || 0} 篇文章`);
 
       if (response.data.articles && response.data.articles.length > 0) {
         return response.data.articles.map(article => ({
@@ -122,6 +126,9 @@ class NewsService {
       return this.getFallbackNews(count, keyword);
     } catch (error) {
       console.error(`獲取 ${keyword} 新聞失敗:`, error.message);
+      if (error.response) {
+        console.error('API 回應:', error.response.status, error.response.data);
+      }
       return this.getFallbackNews(count, keyword);
     }
   }
