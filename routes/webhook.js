@@ -205,7 +205,7 @@ async function handleHelpCommand(event) {
 /status - 查看訂閱狀態
 
 支援的加密貨幣：
-${Object.keys(config.supportedCoins).map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
+${config.supportedCoins.map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
@@ -273,7 +273,7 @@ async function handleCoinQuery(event, coin) {
 async function handleDefaultMessage(event) {
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: `歡迎使用 Crypto News Bot！🤖\n\n請輸入幣種代號查詢價格，或輸入 /help 查看完整指令說明。\n\n支援的幣種：${Object.keys(config.supportedCoins).join(', ')}`
+    text: `歡迎使用 Crypto News Bot！🤖\n\n請輸入幣種代號查詢價格，或輸入 /help 查看完整指令說明。\n\n支援的幣種：${config.supportedCoins.join(', ')}`
   });
 }
 
@@ -283,7 +283,7 @@ async function handleDefaultMessage(event) {
  * @returns {boolean} 是否有效
  */
 function isValidCoinSymbol(coin) {
-  return config.supportedCoins.hasOwnProperty(coin.toLowerCase());
+  return config.supportedCoins.includes(coin.toLowerCase());
 }
 
 /**
