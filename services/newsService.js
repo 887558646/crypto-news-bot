@@ -3,8 +3,12 @@ const config = require('../config');
 
 class NewsService {
   constructor() {
-    this.newsApiKey = config.apis.newsApi.key;
-    this.baseUrl = config.apis.newsApi.baseUrl;
+    this.apiKey = config.news.apiKey;
+    this.baseUrl = config.news.baseUrl;
+    this.defaultQuery = config.news.defaultQuery;
+    this.topHeadlinesEndpoint = config.news.topHeadlinesEndpoint;
+    this.everythingEndpoint = config.news.everythingEndpoint;
+    this.pageSize = config.news.pageSize;
   }
 
   /**
@@ -17,18 +21,17 @@ class NewsService {
     try {
       let query = 'cryptocurrency OR bitcoin OR ethereum';
       
-      if (coin && config.supportedCoins[coin.toLowerCase()]) {
-        const coinName = config.supportedCoins[coin.toLowerCase()];
-        query = `${coinName} OR ${coin.toLowerCase()}`;
+      if (coin && config.supportedCoins.includes(coin.toLowerCase())) {
+        query = `${coin.toLowerCase()} OR ${coin.toUpperCase()}`;
       }
 
-      const response = await axios.get(`${this.baseUrl}/everything`, {
+      const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
         params: {
           q: query,
-          language: 'en',
+          language: 'zh',
           sortBy: 'publishedAt',
           pageSize: limit,
-          apiKey: this.newsApiKey
+          apiKey: this.apiKey
         }
       });
 
@@ -60,36 +63,20 @@ class NewsService {
 
   /**
    * 備用新聞資料（當 API 失敗時使用）
-   * @param {string} coin - 加密貨幣代號
-   * @param {number} limit - 新聞數量
+   * @param {number} count - 新聞數量
+   * @param {string} keyword - 關鍵字
    * @returns {Array} 備用新聞
    */
-  getFallbackNews(coin, limit) {
-    const fallbackNews = [
-      {
-        title: `${coin ? coin.toUpperCase() : '加密貨幣'}市場動態更新`,
-        description: '市場持續關注加密貨幣發展趨勢，投資者需謹慎評估風險。',
-        url: 'https://cointelegraph.com',
-        publishedAt: new Date().toLocaleString('zh-TW'),
-        source: 'CoinTelegraph'
-      },
-      {
-        title: '區塊鏈技術創新持續推進',
-        description: '最新技術發展為加密貨幣生態系統帶來新的可能性。',
-        url: 'https://coindesk.com',
-        publishedAt: new Date().toLocaleString('zh-TW'),
-        source: 'CoinDesk'
-      },
-      {
-        title: '監管環境變化影響市場情緒',
-        description: '各國監管政策調整對加密貨幣市場產生重要影響。',
-        url: 'https://decrypt.co',
-        publishedAt: new Date().toLocaleString('zh-TW'),
-        source: 'Decrypt'
-      }
+  getFallbackNews(count, keyword = '加密貨幣') {
+    console.log('使用備用新聞');
+    const fallback = [
+      { title: `${keyword}市場動態更新`, url: 'https://example.com/crypto-update', source: '假新聞源', publishedAt: new Date().toISOString() },
+      { title: `${keyword}技術分析報告`, url: 'https://example.com/tech-report', source: '假新聞源', publishedAt: new Date().toISOString() },
+      { title: `${keyword}最新政策影響`, url: 'https://example.com/policy-impact', source: '假新聞源', publishedAt: new Date().toISOString() },
+      { title: `${keyword}投資者情緒分析`, url: 'https://example.com/investor-sentiment', source: '假新聞源', publishedAt: new Date().toISOString() },
+      { title: `${keyword}區塊鏈創新應用`, url: 'https://example.com/blockchain-innovation', source: '假新聞源', publishedAt: new Date().toISOString() },
     ];
-
-    return fallbackNews.slice(0, limit);
+    return fallback.slice(0, count);
   }
 
   /**
@@ -98,6 +85,85 @@ class NewsService {
    */
   async getDailyNewsSummary() {
     return await this.getCryptoNews(null, 3);
+  }
+
+  /**
+   * 根據關鍵字獲取新聞
+   * @param {string} keyword - 關鍵字
+   * @param {number} count - 新聞數量
+   * @returns {Promise<Array>} 新聞列表
+   */
+  async getNewsByKeyword(keyword, count = 3) {
+    try {
+      const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
+        params: {
+          q: keyword,
+          language: 'zh',
+          sortBy: 'publishedAt',
+          apiKey: this.apiKey,
+          pageSize: count,
+        },
+      });
+
+      if (response.data.articles && response.data.articles.length > 0) {
+        return response.data.articles.map(article => ({
+          title: article.title,
+          url: article.url,
+          source: article.source.name,
+          publishedAt: article.publishedAt,
+        }));
+      }
+      return this.getFallbackNews(count, keyword);
+    } catch (error) {
+      console.error(`獲取 ${keyword} 新聞失敗:`, error.message);
+      return this.getFallbackNews(count, keyword);
+    }
+  }
+
+  /**
+   * 獲取前幾條加密貨幣新聞
+   * @param {number} count - 新聞數量
+   * @returns {Promise<Array>} 新聞列表
+   */
+  async getTopCryptoNews(count = 3) {
+    try {
+      const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
+        params: {
+          q: this.defaultQuery,
+          language: 'zh',
+          sortBy: 'publishedAt',
+          apiKey: this.apiKey,
+          pageSize: count,
+        },
+      });
+
+      if (response.data.articles && response.data.articles.length > 0) {
+        return response.data.articles.map(article => ({
+          title: article.title,
+          url: article.url,
+          source: article.source.name,
+          publishedAt: article.publishedAt,
+        }));
+      }
+      return this.getFallbackNews(count);
+    } catch (error) {
+      console.error('獲取新聞失敗:', error.message);
+      return this.getFallbackNews(count);
+    }
+  }
+
+  /**
+   * 格式化新聞訊息
+   * @param {Array} newsArticles - 新聞文章陣列
+   * @returns {string} 格式化後的新聞訊息
+   */
+  formatNews(newsArticles) {
+    if (!newsArticles || newsArticles.length === 0) {
+      return '目前沒有最新新聞。';
+    }
+    return newsArticles.map((news, index) =>
+      `${index + 1}. ${news.title}\n來源: ${news.source}\n連結: ${news.url}`
+    ).join('\n\n');
   }
 }
 
