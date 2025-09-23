@@ -149,7 +149,49 @@ class InfoService {
   }
 
   /**
-   * 格式化幣種資訊卡
+   * 格式化完整幣種資訊卡 (包含價格和詳細資訊)
+   * @param {Object} priceData - 價格資料
+   * @param {Object} coinInfo - 幣種資訊
+   * @returns {string} 格式化訊息
+   */
+  formatCoinInfoCard(priceData, coinInfo) {
+    const { name, symbol, marketCapRank, marketCap, volume24h, genesisDate, description, lastUpdated } = coinInfo;
+    const { priceUSD, priceTWD, change24h, marketCap: priceMarketCap } = priceData;
+
+    let message = `📌 ${name} (${symbol}) 資訊卡\n\n`;
+    
+    // 價格資訊
+    message += `💰 價格資訊\n`;
+    message += `USD: $${priceUSD ? priceUSD.toLocaleString() : 'N/A'}\n`;
+    message += `TWD: NT$${priceTWD ? priceTWD.toLocaleString() : 'N/A'}\n`;
+    
+    // 漲跌幅
+    const changeEmoji = change24h >= 0 ? '📈' : '📉';
+    const changeColor = change24h >= 0 ? '+' : '';
+    message += `${changeEmoji} 24h 變化: ${changeColor}${change24h ? change24h.toFixed(2) : '0.00'}%\n\n`;
+    
+    // 基本資訊
+    message += `📊 基本資訊\n`;
+    message += `市值排名：#${marketCapRank}\n`;
+    message += `市值：${this.formatMarketCap(marketCap)}\n`;
+    message += `24h 交易量：${this.formatVolume(volume24h)}\n`;
+    message += `上線年份：${this.formatGenesisDate(genesisDate)}\n\n`;
+    
+    // 簡介
+    message += `📝 簡介\n${description}\n\n`;
+    
+    // 白皮書連結
+    message += `📄 白皮書\n`;
+    message += `https://coinmarketcap.com/currencies/${this.getCoinSlug(symbol)}/\n\n`;
+    
+    // 更新時間
+    message += `⏰ 更新時間：${lastUpdated}`;
+
+    return message;
+  }
+
+  /**
+   * 格式化幣種資訊卡 (舊版本，保留向後兼容)
    * @param {Object} coinInfo - 幣種資訊
    * @returns {string} 格式化訊息
    */
@@ -180,6 +222,48 @@ class InfoService {
     message += `⏰ 更新時間：${lastUpdated}`;
 
     return message;
+  }
+
+  /**
+   * 獲取幣種的 CoinMarketCap slug
+   * @param {string} symbol - 幣種符號
+   * @returns {string} slug
+   */
+  getCoinSlug(symbol) {
+    const slugMap = {
+      'BTC': 'bitcoin',
+      'ETH': 'ethereum',
+      'USDT': 'tether',
+      'BNB': 'binancecoin',
+      'SOL': 'solana',
+      'XRP': 'xrp',
+      'USDC': 'usd-coin',
+      'STETH': 'staked-ether',
+      'ADA': 'cardano',
+      'AVAX': 'avalanche-2',
+      'TRX': 'tron',
+      'WBTC': 'wrapped-bitcoin',
+      'LINK': 'chainlink',
+      'DOT': 'polkadot',
+      'MATIC': 'matic-network',
+      'DAI': 'dai',
+      'SHIB': 'shiba-inu',
+      'LTC': 'litecoin',
+      'BCH': 'bitcoin-cash',
+      'UNI': 'uniswap',
+      'ATOM': 'cosmos',
+      'ETC': 'ethereum-classic',
+      'XLM': 'stellar',
+      'NEAR': 'near',
+      'ALGO': 'algorand',
+      'VET': 'vechain',
+      'FIL': 'filecoin',
+      'ICP': 'internet-computer',
+      'HBAR': 'hedera-hashgraph',
+      'APT': 'aptos'
+    };
+    
+    return slugMap[symbol.toUpperCase()] || symbol.toLowerCase();
   }
 
   /**

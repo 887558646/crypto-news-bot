@@ -101,8 +101,6 @@ async function handleEvent(event) {
            return await handleNewsCommand(event);
          } else if (messageText.startsWith('/signal ')) {
            return await handleSignalCommand(event, messageText);
-         } else if (messageText.startsWith('/info ')) {
-           return await handleInfoCommand(event, messageText);
          } else if (isValidCoinSymbol(messageText)) {
            return await handleCoinQuery(event, messageText);
          } else {
@@ -185,7 +183,6 @@ async function handleHelpCommand(event) {
      /feargreed - 恐懼貪婪指數
      /news - 今日熱門新聞
      /signal [幣種] - 技術分析信號
-     /info [幣種] - 幣種資訊卡
 
      ℹ️ 其他指令：
      /help - 顯示此說明
@@ -230,12 +227,15 @@ async function handleCoinQuery(event, coin) {
     // 獲取價格資訊
     const priceData = await priceService.getCoinPrice(coin);
     
-    // 格式化價格資訊
-    const priceText = priceService.formatPrice(priceData);
+    // 獲取詳細資訊
+    const coinInfo = await infoService.getCoinInfo(coin);
+    
+    // 格式化完整資訊卡
+    const infoText = infoService.formatCoinInfoCard(priceData, coinInfo);
     
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: priceText
+      text: infoText
     });
   } catch (error) {
     return client.replyMessage(event.replyToken, {
@@ -431,45 +431,6 @@ async function handleSignalCommand(event, messageText) {
   }
 }
 
-/**
- * 處理幣種資訊指令
- * @param {Object} event - LINE 事件
- * @param {string} messageText - 訊息文字
- */
-async function handleInfoCommand(event, messageText) {
-  try {
-    const coin = messageText.replace('/info ', '').trim().toLowerCase();
-    
-    if (!coin) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '請輸入幣種代號，例如：/info btc'
-      });
-    }
-
-    if (!isValidCoinSymbol(coin)) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
-      });
-    }
-
-    // 獲取幣種資訊
-    const coinInfo = await infoService.getCoinInfo(coin);
-    const infoText = infoService.formatCoinInfo(coinInfo);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: infoText
-    });
-  } catch (error) {
-    console.error('幣種資訊處理失敗:', error);
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '無法獲取幣種資訊，請稍後再試。'
-    });
-  }
-}
 
 
 /**
