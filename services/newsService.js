@@ -95,11 +95,17 @@ class NewsService {
    */
   async getNewsByKeyword(keyword, count = 3) {
     try {
+      // 計算一天前的時間
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      const fromDate = oneDayAgo.toISOString().split('T')[0];
+
       const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
         params: {
           q: keyword,
           language: 'zh',
           sortBy: 'publishedAt',
+          from: fromDate,
           apiKey: this.apiKey,
           pageSize: count,
         },
@@ -127,11 +133,17 @@ class NewsService {
    */
   async getTopCryptoNews(count = 3) {
     try {
+      // 計算一天前的時間
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      const fromDate = oneDayAgo.toISOString().split('T')[0];
+
       const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
         params: {
           q: this.defaultQuery,
           language: 'zh',
           sortBy: 'publishedAt',
+          from: fromDate,
           apiKey: this.apiKey,
           pageSize: count,
         },

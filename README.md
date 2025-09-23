@@ -1,23 +1,18 @@
 # 🤖 Crypto News Bot
 
-一個功能豐富的 LINE Bot，提供加密貨幣新聞、即時價格查詢和圖表分析功能。
+一個功能豐富的 LINE Bot，提供加密貨幣新聞和即時價格查詢功能。
 
 ## ✨ 功能特色
 
 ### 📰 新聞推播
 - **每日新聞摘要**：每天早上 9:00 自動推播前 3 條加密貨幣新聞
 - **特定幣種訂閱**：支援訂閱特定加密貨幣的新聞推播
-- **即時新聞查詢**：輸入幣種代號即可獲取最新相關新聞
+- **即時新聞查詢**：輸入幣種代號即可獲取 24 小時內最新相關新聞
 
 ### 💰 價格查詢
-- **即時價格**：支援 BTC、ETH、SOL、BNB、SUI 等主流幣種
+- **即時價格**：支援市值前30大加密貨幣
 - **多幣種支援**：同時顯示 USD 和 TWD 價格
 - **24小時變化**：顯示價格變化和交易量資訊
-
-### 📈 圖表分析
-- **價格走勢圖**：使用 `/chart [幣種]` 查看過去 7 天價格走勢
-- **視覺化圖表**：自動生成美觀的價格圖表
-- **多幣種比較**：支援多個幣種的價格比較
 
 ### 🔔 訂閱管理
 - **個人化訂閱**：每個用戶可獨立管理訂閱狀態
@@ -30,7 +25,8 @@
 - **LINE Messaging API SDK** - LINE Bot 整合
 - **Axios** - HTTP 請求處理
 - **node-cron** - 定時任務排程
-- **QuickChart API** - 圖表生成
+- **CoinGecko API** - 加密貨幣價格數據
+- **NewsAPI** - 新聞數據
 
 ## 📂 專案結構
 
@@ -42,8 +38,7 @@ crypto-news-bot/
 ├── README.md             # 專案說明
 ├── services/             # 服務層
 │   ├── newsService.js    # 新聞服務
-│   ├── priceService.js   # 價格服務
-│   └── chartService.js   # 圖表服務
+│   └── priceService.js   # 價格服務
 ├── routes/               # 路由層
 │   └── webhook.js        # LINE webhook 處理
 └── utils/                # 工具層
@@ -105,19 +100,25 @@ https://your-domain.com/webhook
 | 指令 | 說明 | 範例 |
 |------|------|------|
 | `btc` | 查詢 BTC 價格和新聞 | `btc` |
-| `/chart btc` | 查看 BTC 價格走勢圖 | `/chart btc` |
 | `/subscribe btc` | 訂閱 BTC 新聞推播 | `/subscribe btc` |
 | `/unsubscribe` | 取消所有訂閱 | `/unsubscribe` |
 | `/help` | 顯示幫助資訊 | `/help` |
 | `/status` | 查看訂閱狀態 | `/status` |
 
-### 支援的加密貨幣
+### 支援的加密貨幣 (市值前30大)
 
-- **BTC** - Bitcoin
-- **ETH** - Ethereum
-- **SOL** - Solana
-- **BNB** - Binance Coin
-- **SUI** - Sui
+| 代號 | 全名 | 代號 | 全名 | 代號 | 全名 |
+|------|------|------|------|------|------|
+| **BTC** | Bitcoin | **USDT** | Tether | **XRP** | Ripple |
+| **ETH** | Ethereum | **USDC** | USD Coin | **STETH** | Staked Ether |
+| **BNB** | Binance Coin | **ADA** | Cardano | **AVAX** | Avalanche |
+| **SOL** | Solana | **TRX** | TRON | **WBTC** | Wrapped Bitcoin |
+| **LINK** | Chainlink | **DOT** | Polkadot | **MATIC** | Polygon |
+| **DAI** | Dai | **SHIB** | Shiba Inu | **LTC** | Litecoin |
+| **BCH** | Bitcoin Cash | **UNI** | Uniswap | **ATOM** | Cosmos |
+| **ETC** | Ethereum Classic | **XLM** | Stellar | **NEAR** | NEAR Protocol |
+| **ALGO** | Algorand | **VET** | VeChain | **FIL** | Filecoin |
+| **ICP** | Internet Computer | **HBAR** | Hedera | **APT** | Aptos |
 
 ## 🔧 API 端點
 
@@ -146,7 +147,7 @@ Content-Type: application/json
 POST /webhook
 ```
 
-## 📊 排程設定
+## 📊 排程設定 (UTC+8)
 
 | 時間 | 功能 | 說明 |
 |------|------|------|
@@ -188,10 +189,7 @@ POST /webhook
 ### CoinGecko API
 - 免費使用，無需申請 API Key
 - 有速率限制，建議適度使用
-
-### QuickChart API
-- 免費使用，無需申請 API Key
-- 支援多種圖表類型
+- 提供市值前30大加密貨幣數據
 
 ## 🐛 故障排除
 
@@ -205,9 +203,9 @@ POST /webhook
    - 檢查 NewsAPI Key 是否有效
    - 確認 API 請求次數未超限
 
-3. **圖表生成失敗**
-   - 檢查 QuickChart API 是否正常
-   - 確認價格資料獲取成功
+3. **價格查詢失敗**
+   - 檢查 CoinGecko API 是否正常
+   - 確認支援的幣種代號正確
 
 4. **推播功能異常**
    - 檢查排程器是否正常啟動

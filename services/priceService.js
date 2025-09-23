@@ -19,13 +19,38 @@ class PriceService {
         throw new Error(`不支援的加密貨幣: ${coin}`);
       }
 
-      // 映射到 CoinGecko 的實際 ID
+      // 映射到 CoinGecko 的實際 ID (市值前30大)
       const coinGeckoIds = {
         'btc': 'bitcoin',
         'eth': 'ethereum',
-        'sol': 'solana',
+        'usdt': 'tether',
         'bnb': 'binancecoin',
-        'sui': 'sui'
+        'sol': 'solana',
+        'xrp': 'ripple',
+        'usdc': 'usd-coin',
+        'steth': 'staked-ether',
+        'ada': 'cardano',
+        'avax': 'avalanche-2',
+        'trx': 'tron',
+        'wbtc': 'wrapped-bitcoin',
+        'link': 'chainlink',
+        'dot': 'polkadot',
+        'matic': 'matic-network',
+        'dai': 'dai',
+        'shib': 'shiba-inu',
+        'ltc': 'litecoin',
+        'bch': 'bitcoin-cash',
+        'uni': 'uniswap',
+        'atom': 'cosmos',
+        'etc': 'ethereum-classic',
+        'xlm': 'stellar',
+        'near': 'near',
+        'algo': 'algorand',
+        'vet': 'vechain',
+        'fil': 'filecoin',
+        'icp': 'internet-computer',
+        'hbar': 'hedera-hashgraph',
+        'apt': 'aptos'
       };
 
       const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
