@@ -1,4 +1,4 @@
-const { EMA, Stochastic, RSI } = require('technicalindicators');
+const { SMA, Stochastic, RSI } = require('technicalindicators');
 const priceService = require('./priceService');
 
 class SignalService {
@@ -28,16 +28,16 @@ class SignalService {
       const lows = ohlcvData.map(d => d.low);
 
       // 計算技術指標
-      const emaSignal = this.calculateEMASignal(closes);
+      const maSignal = this.calculateMASignal(closes);
       const kdSignal = this.calculateKDSignal(highs, lows, closes);
       const rsiSignal = this.calculateRSISignal(closes);
 
       // 生成綜合判斷
-      const overall = this.generateOverallSignal(emaSignal, kdSignal, rsiSignal);
+      const overall = this.generateOverallSignal(maSignal, kdSignal, rsiSignal);
 
       const result = {
         coin: coin.toUpperCase(),
-        emaSignal: emaSignal,
+        maSignal: maSignal,
         kdSignal: kdSignal,
         rsiSignal: rsiSignal,
         overall: overall,
@@ -55,25 +55,25 @@ class SignalService {
   }
 
   /**
-   * 計算 EMA 信號
+   * 計算 MA 信號 (5MA 和 20MA)
    * @param {Array} closes - 收盤價陣列
-   * @returns {Object} EMA 信號
+   * @returns {Object} MA 信號
    */
-  calculateEMASignal(closes) {
+  calculateMASignal(closes) {
     try {
-      // 計算 EMA(10) 和 EMA(60)
-      const ema10 = EMA.calculate({ period: 10, values: closes });
-      const ema60 = EMA.calculate({ period: 60, values: closes });
+      // 計算 5MA 和 20MA
+      const ma5 = SMA.calculate({ period: 5, values: closes });
+      const ma20 = SMA.calculate({ period: 20, values: closes });
 
-      if (ema10.length === 0 || ema60.length === 0) {
-        return { signal: "數據不足", ema10: 0, ema60: 0 };
+      if (ma5.length === 0 || ma20.length === 0) {
+        return { signal: "數據不足", ma5: 0, ma20: 0 };
       }
 
-      const currentEma10 = ema10[ema10.length - 1];
-      const currentEma60 = ema60[ema60.length - 1];
+      const currentMa5 = ma5[ma5.length - 1];
+      const currentMa20 = ma20[ma20.length - 1];
 
       let signal;
-      if (currentEma10 > currentEma60) {
+      if (currentMa5 > currentMa20) {
         signal = "多頭 → 買進";
       } else {
         signal = "空頭 → 賣出";
@@ -81,13 +81,13 @@ class SignalService {
 
       return {
         signal: signal,
-        ema10: currentEma10,
-        ema60: currentEma60
+        ma5: currentMa5,
+        ma20: currentMa20
       };
 
     } catch (error) {
-      console.error('EMA 計算失敗:', error.message);
-      return { signal: "計算失敗", ema10: 0, ema60: 0 };
+      console.error('MA 計算失敗:', error.message);
+      return { signal: "計算失敗", ma5: 0, ma20: 0 };
     }
   }
 
@@ -175,18 +175,18 @@ class SignalService {
 
   /**
    * 生成綜合判斷
-   * @param {Object} emaSignal - EMA 信號
+   * @param {Object} maSignal - MA 信號
    * @param {Object} kdSignal - KD 信號
    * @param {Object} rsiSignal - RSI 信號
    * @returns {Object} 綜合判斷
    */
-  generateOverallSignal(emaSignal, kdSignal, rsiSignal) {
+  generateOverallSignal(maSignal, kdSignal, rsiSignal) {
     let bullishCount = 0;
     let bearishCount = 0;
 
     // 統計看多和看空信號
-    if (emaSignal.signal.includes("買進")) bullishCount++;
-    else if (emaSignal.signal.includes("賣出")) bearishCount++;
+    if (maSignal.signal.includes("買進")) bullishCount++;
+    else if (maSignal.signal.includes("賣出")) bearishCount++;
 
     if (kdSignal.signal.includes("買進")) bullishCount++;
     else if (kdSignal.signal.includes("賣出")) bearishCount++;
@@ -226,15 +226,15 @@ class SignalService {
    * @returns {string} 格式化訊息
    */
   formatTechnicalSignal(result) {
-    const { coin, emaSignal, kdSignal, rsiSignal, overall, currentPrice, lastUpdated } = result;
+    const { coin, maSignal, kdSignal, rsiSignal, overall, currentPrice, lastUpdated } = result;
 
     let message = `📊 ${coin} 技術指標 (日線)\n\n`;
     
-    // EMA 信號
-    message += `📈 EMA(10/60)：${emaSignal.signal}\n`;
-    if (emaSignal.ema10 > 0) {
-      message += `   EMA10: $${emaSignal.ema10.toFixed(2)}\n`;
-      message += `   EMA60: $${emaSignal.ema60.toFixed(2)}\n\n`;
+    // MA 信號
+    message += `📈 MA(5/20)：${maSignal.signal}\n`;
+    if (maSignal.ma5 > 0) {
+      message += `   5MA: $${maSignal.ma5.toFixed(2)}\n`;
+      message += `   20MA: $${maSignal.ma20.toFixed(2)}\n\n`;
     }
 
     // KD 信號
@@ -270,7 +270,7 @@ class SignalService {
   getFallbackSignal(coin) {
     return {
       coin: coin.toUpperCase(),
-      emaSignal: { signal: "數據不足", ema10: 0, ema60: 0 },
+      maSignal: { signal: "數據不足", ma5: 0, ma20: 0 },
       kdSignal: { signal: "數據不足", k: 0, d: 0 },
       rsiSignal: { signal: "數據不足", rsi: 0 },
       overall: { signal: "無法分析 → 請稍後再試", bullishCount: 0, bearishCount: 0, neutralCount: 3 },
