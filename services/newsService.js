@@ -1,6 +1,5 @@
 const axios = require('axios');
 const config = require('../config');
-const backupNewsService = require('./backupNewsService');
 
 class NewsService {
   constructor() {
@@ -66,11 +65,6 @@ class NewsService {
       }
       } catch (error) {
         console.error('獲取新聞失敗:', error.message);
-        // 如果是 403 錯誤，嘗試使用備用新聞源
-        if (error.message.includes('403') || error.message.includes('426')) {
-          console.log('🔄 嘗試使用備用新聞源...');
-          return backupNewsService.getCryptoNews(coin, limit);
-        }
         throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
       }
   }
@@ -234,11 +228,6 @@ class NewsService {
       return this.getFallbackNews(count);
     } catch (error) {
       console.error('獲取新聞失敗:', error.message);
-      // 如果是 403 錯誤，嘗試使用備用新聞源
-      if (error.message.includes('403') || error.message.includes('426')) {
-        console.log('🔄 嘗試使用備用新聞源...');
-        return backupNewsService.getTopCryptoNews(count);
-      }
       throw new Error(`獲取熱門新聞失敗: ${error.message}`);
     }
   }
