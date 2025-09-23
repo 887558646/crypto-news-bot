@@ -430,8 +430,9 @@ async function handleMarketCommand(event) {
     let fearGreedData = null;
     try {
       fearGreedData = await marketService.getFearGreedIndex();
+      console.log('恐懼貪婪指數數據:', fearGreedData);
     } catch (error) {
-      console.log('恐懼貪婪指數獲取失敗，將不顯示該資訊');
+      console.log('恐懼貪婪指數獲取失敗，將不顯示該資訊:', error.message);
     }
     
     const marketText = marketService.formatMarketOverview(marketData, fearGreedData);

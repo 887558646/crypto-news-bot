@@ -70,26 +70,31 @@ class MarketService {
    */
   async getFearGreedIndex() {
     try {
-      const response = await axios.get(`${this.baseUrl}/global`, {
-        params: {
-          x_cg_demo_api_key: config.coingecko.apiKey
+      // 使用 Alternative.me API 獲取恐懼貪婪指數
+      const response = await axios.get('https://api.alternative.me/fng/', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       
-      if (response.data.data) {
-        const fearGreed = response.data.data.fear_and_greed_index;
+      console.log('恐懼貪婪指數 API 回應:', JSON.stringify(response.data, null, 2));
+      
+      if (response.data.data && response.data.data.length > 0) {
+        const fearGreed = response.data.data[0];
         return {
-          value: fearGreed.value,
+          value: parseInt(fearGreed.value),
           valueClassification: fearGreed.value_classification,
           timestamp: fearGreed.timestamp,
           timeUntilUpdate: fearGreed.time_until_update,
           lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
         };
       }
-      throw new Error('無法獲取恐懼貪婪指數');
+      
+      console.log('Alternative.me API 沒有返回恐懼貪婪指數');
+      return null;
     } catch (error) {
       console.error('獲取恐懼貪婪指數失敗:', error.message);
-      throw new Error(`獲取恐懼貪婪指數失敗: ${error.message}`);
+      return null;
     }
   }
 
