@@ -104,8 +104,13 @@ class Scheduler {
 
       // 獲取所有訂閱的幣種
       const subscribedCoins = new Set();
-      for (const [userId, coin] of userSubscriptions) {
-        subscribedCoins.add(coin);
+      for (const [userId, coins] of userSubscriptions) {
+        if (Array.isArray(coins)) {
+          coins.forEach(coin => subscribedCoins.add(coin));
+        } else {
+          // 向後兼容舊格式
+          subscribedCoins.add(coins);
+        }
       }
 
       // 為每個訂閱的幣種推播新聞

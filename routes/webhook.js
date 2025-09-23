@@ -85,8 +85,8 @@ async function handleEvent(event) {
          // 處理不同類型的訊息
          if (messageText.startsWith('/subscribe ')) {
       return await handleSubscribeCommand(event, messageText, userId);
-    } else if (messageText === '/unsubscribe') {
-      return await handleUnsubscribeCommand(event, userId);
+    } else if (messageText.startsWith('/unsubscribe')) {
+      return await handleUnsubscribeCommand(event, messageText, userId);
     } else if (messageText === '/help') {
       return await handleHelpCommand(event);
          } else if (messageText === '/status') {
@@ -128,16 +128,28 @@ async function handleSubscribeCommand(event, messageText, userId) {
   if (!isValidCoinSymbol(coin)) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${Object.keys(config.supportedCoins).join(', ')}`
+      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
     });
   }
 
-  // 設定用戶訂閱
-  userSubscriptions.set(userId, coin.toLowerCase());
+  // 獲取用戶現有訂閱
+  const currentSubscriptions = userSubscriptions.get(userId) || [];
+  
+  // 檢查是否已經訂閱
+  if (currentSubscriptions.includes(coin.toLowerCase())) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `⚠️ 您已經訂閱了 ${coin.toUpperCase()} 新聞推播。\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe ${coin} 可取消特定幣種訂閱。`
+    });
+  }
+
+  // 添加新訂閱
+  currentSubscriptions.push(coin.toLowerCase());
+  userSubscriptions.set(userId, currentSubscriptions);
   
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: `✅ 已成功訂閱 ${coin.toUpperCase()} 新聞推播！\n每天早上 9:00 會收到最新消息。\n\n使用 /unsubscribe 可取消訂閱。`
+    text: `✅ 已成功訂閱 ${coin.toUpperCase()} 新聞推播！\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n每天早上 9:00 會收到最新消息。\n使用 /unsubscribe ${coin} 可取消特定幣種訂閱。`
   });
 }
 
@@ -146,19 +158,55 @@ async function handleSubscribeCommand(event, messageText, userId) {
  * @param {Object} event - LINE 事件
  * @param {string} userId - 用戶 ID
  */
-async function handleUnsubscribeCommand(event, userId) {
-  if (userSubscriptions.has(userId)) {
-    const coin = userSubscriptions.get(userId);
-    userSubscriptions.delete(userId);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `✅ 已取消訂閱 ${coin.toUpperCase()} 新聞推播。\n\n使用 /subscribe [幣種] 可重新訂閱。`
-    });
-  } else {
+async function handleUnsubscribeCommand(event, messageText, userId) {
+  const coin = messageText.replace('/unsubscribe', '').trim();
+  
+  if (!userSubscriptions.has(userId)) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: '您目前沒有訂閱任何新聞推播。\n\n使用 /subscribe [幣種] 可訂閱特定幣種的新聞。'
+    });
+  }
+
+  const currentSubscriptions = userSubscriptions.get(userId);
+  
+  if (!coin) {
+    // 取消所有訂閱
+    userSubscriptions.delete(userId);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `✅ 已取消所有新聞推播訂閱。\n\n使用 /subscribe [幣種] 可重新訂閱。`
+    });
+  }
+  
+  if (!isValidCoinSymbol(coin)) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
+    });
+  }
+  
+  if (!currentSubscriptions.includes(coin.toLowerCase())) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `⚠️ 您沒有訂閱 ${coin.toUpperCase()} 新聞推播。\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}`
+    });
+  }
+  
+  // 移除特定幣種訂閱
+  const updatedSubscriptions = currentSubscriptions.filter(c => c !== coin.toLowerCase());
+  
+  if (updatedSubscriptions.length === 0) {
+    userSubscriptions.delete(userId);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n您目前沒有訂閱任何新聞推播。\n使用 /subscribe [幣種] 可重新訂閱。`
+    });
+  } else {
+    userSubscriptions.set(userId, updatedSubscriptions);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n當前訂閱: ${updatedSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
     });
   }
 }
@@ -173,9 +221,10 @@ async function handleHelpCommand(event) {
      📊 查詢價格：
      直接輸入幣種代號 (${config.supportedCoins.slice(0, 5).join(', ')}...)
 
-     📰 訂閱功能：
-     /subscribe [幣種] - 訂閱特定幣種新聞
-     /unsubscribe - 取消訂閱
+    📰 訂閱功能：
+    /subscribe [幣種] - 訂閱特定幣種新聞
+    /unsubscribe [幣種] - 取消特定幣種訂閱
+    /unsubscribe - 取消所有訂閱
 
      📈 市場功能：
      /market - 全球市場總覽
@@ -204,10 +253,10 @@ async function handleHelpCommand(event) {
  */
 async function handleStatusCommand(event, userId) {
   if (userSubscriptions.has(userId)) {
-    const coin = userSubscriptions.get(userId);
+    const coins = userSubscriptions.get(userId);
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: `📊 您的訂閱狀態：\n✅ 已訂閱 ${coin.toUpperCase()} 新聞推播\n\n每天早上 9:00 會收到最新消息。`
+      text: `📊 您的訂閱狀態：\n✅ 已訂閱 ${coins.map(c => c.toUpperCase()).join(', ')} 新聞推播\n\n每天早上 9:00 會收到最新消息。\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
     });
   } else {
     return client.replyMessage(event.replyToken, {
@@ -440,7 +489,7 @@ async function handleSignalCommand(event, messageText) {
  */
 async function broadcastNewsToSubscribers(coin, news) {
   const subscribers = Array.from(userSubscriptions.entries())
-    .filter(([userId, subscribedCoin]) => subscribedCoin === coin.toLowerCase())
+    .filter(([userId, subscribedCoins]) => subscribedCoins.includes(coin.toLowerCase()))
     .map(([userId]) => userId);
   
   if (subscribers.length === 0) {
