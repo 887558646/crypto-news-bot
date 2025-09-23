@@ -4,6 +4,8 @@ const config = require('../config');
 const newsService = require('../services/newsService');
 const priceService = require('../services/priceService');
 const marketService = require('../services/marketService');
+const signalService = require('../services/signalService');
+const infoService = require('../services/infoService');
 
 const router = express.Router();
 
@@ -95,6 +97,14 @@ async function handleEvent(event) {
            return await handleTrendingCommand(event);
          } else if (messageText === '/feargreed') {
            return await handleFearGreedCommand(event);
+         } else if (messageText === '/news') {
+           return await handleNewsCommand(event);
+         } else if (messageText.startsWith('/signal ')) {
+           return await handleSignalCommand(event, messageText);
+         } else if (messageText.startsWith('/info ')) {
+           return await handleInfoCommand(event, messageText);
+         } else if (messageText.startsWith('/searchnews ')) {
+           return await handleSearchNewsCommand(event, messageText);
          } else if (isValidCoinSymbol(messageText)) {
            return await handleCoinQuery(event, messageText);
          } else {
@@ -175,13 +185,17 @@ async function handleHelpCommand(event) {
      /market - 全球市場總覽
      /trending - 趨勢幣種
      /feargreed - 恐懼貪婪指數
+     /news - 今日熱門新聞
+     /signal [幣種] - 技術分析信號
+     /info [幣種] - 幣種資訊卡
+     /searchnews [關鍵字] - 關鍵字新聞搜尋
 
      ℹ️ 其他指令：
      /help - 顯示此說明
      /status - 查看訂閱狀態
 
      支援的加密貨幣 (市值前30大)：
-     ${config.supportedCoins.map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
+     ${config.supportedCoins.join(', ')}`;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
@@ -223,10 +237,10 @@ async function handleCoinQuery(event, coin) {
     const news = await newsService.getCryptoNews(coin, 2);
     
     // 格式化價格資訊
-    const priceText = formatPriceMessage(priceData);
+    const priceText = priceService.formatPrice(priceData);
     
     // 格式化新聞資訊
-    const newsText = formatNewsMessage(news);
+    const newsText = newsService.formatNewsMessage(news);
     
     const responseText = `${priceText}\n\n${newsText}`;
     
@@ -361,6 +375,149 @@ async function handleFearGreedCommand(event) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: '無法獲取恐懼貪婪指數，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理新聞指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleNewsCommand(event) {
+  try {
+    const news = await newsService.getTopCryptoNews(5);
+    const newsText = newsService.formatNewsMessage(news);
+    
+    const message = `📰 今日熱門加密貨幣新聞\n\n${newsText}`;
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: message
+    });
+  } catch (error) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取新聞，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理技術分析信號指令
+ * @param {Object} event - LINE 事件
+ * @param {string} messageText - 訊息文字
+ */
+async function handleSignalCommand(event, messageText) {
+  try {
+    const coin = messageText.replace('/signal ', '').trim().toLowerCase();
+    
+    if (!coin) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '請輸入幣種代號，例如：/signal btc'
+      });
+    }
+
+    if (!isValidCoinSymbol(coin)) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
+      });
+    }
+
+    // 生成技術分析信號
+    const signalResult = await signalService.generateTechnicalSignal(coin);
+    const signalText = signalService.formatTechnicalSignal(signalResult);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: signalText
+    });
+  } catch (error) {
+    console.error('技術分析信號處理失敗:', error);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法生成技術分析信號，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理幣種資訊指令
+ * @param {Object} event - LINE 事件
+ * @param {string} messageText - 訊息文字
+ */
+async function handleInfoCommand(event, messageText) {
+  try {
+    const coin = messageText.replace('/info ', '').trim().toLowerCase();
+    
+    if (!coin) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '請輸入幣種代號，例如：/info btc'
+      });
+    }
+
+    if (!isValidCoinSymbol(coin)) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
+      });
+    }
+
+    // 獲取幣種資訊
+    const coinInfo = await infoService.getCoinInfo(coin);
+    const infoText = infoService.formatCoinInfo(coinInfo);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: infoText
+    });
+  } catch (error) {
+    console.error('幣種資訊處理失敗:', error);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取幣種資訊，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理關鍵字新聞搜尋指令
+ * @param {Object} event - LINE 事件
+ * @param {string} messageText - 訊息文字
+ */
+async function handleSearchNewsCommand(event, messageText) {
+  try {
+    const keyword = messageText.replace('/searchnews ', '').trim();
+    
+    if (!keyword) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '請輸入搜尋關鍵字，例如：/searchnews defi'
+      });
+    }
+
+    if (keyword.length < 2) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '關鍵字至少需要2個字符，例如：/searchnews defi'
+      });
+    }
+
+    // 搜尋關鍵字新聞
+    const news = await newsService.searchNewsByKeyword(keyword, 5);
+    const newsText = newsService.formatSearchNewsMessage(keyword, news);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: newsText
+    });
+  } catch (error) {
+    console.error('關鍵字新聞搜尋處理失敗:', error);
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法搜尋新聞，請稍後再試。'
     });
   }
 }

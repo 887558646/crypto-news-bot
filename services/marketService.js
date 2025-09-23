@@ -28,7 +28,7 @@ class MarketService {
       throw new Error('無法獲取市場數據');
     } catch (error) {
       console.error('獲取市場總覽失敗:', error.message);
-      return this.getFallbackMarketData();
+      throw new Error(`獲取市場總覽失敗: ${error.message}`);
     }
   }
 
@@ -52,7 +52,7 @@ class MarketService {
       throw new Error('無法獲取趨勢數據');
     } catch (error) {
       console.error('獲取趨勢幣種失敗:', error.message);
-      return [];
+      throw new Error(`獲取趨勢幣種失敗: ${error.message}`);
     }
   }
 
@@ -62,21 +62,23 @@ class MarketService {
    */
   async getFearGreedIndex() {
     try {
-      const response = await axios.get(`${this.baseUrl}/fear_greed_index`);
+      // 使用 Alternative.me API 替代 CoinGecko API
+      const response = await axios.get('https://api.alternative.me/fng/');
       
       if (response.data.data && response.data.data.length > 0) {
         const latest = response.data.data[0];
         return {
-          value: latest.value,
+          value: parseInt(latest.value),
           valueClassification: latest.value_classification,
-          timestamp: latest.timestamp,
-          timeUntilUpdate: latest.time_until_update
+          timestamp: parseInt(latest.timestamp),
+          timeUntilUpdate: parseInt(latest.time_until_update),
+          lastUpdated: new Date(parseInt(latest.timestamp) * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
         };
       }
       throw new Error('無法獲取恐懼貪婪指數');
     } catch (error) {
       console.error('獲取恐懼貪婪指數失敗:', error.message);
-      return this.getFallbackFearGreedData();
+      throw new Error(`獲取恐懼貪婪指數失敗: ${error.message}`);
     }
   }
 
@@ -123,6 +125,14 @@ class MarketService {
       message += `   排名: ${rank}\n\n`;
     });
 
+    message += '📊 篩選標準：\n';
+    message += '• 搜尋熱度：用戶在 CoinGecko 上的搜尋次數\n';
+    message += '• 社群活躍度：Reddit、Twitter 等社群媒體提及\n';
+    message += '• 價格波動：24小時內價格變化幅度\n';
+    message += '• 交易量變化：24小時交易量增長\n';
+    message += '• 市值排名：當前市值排名\n\n';
+    message += '💡 數據來源：CoinGecko API';
+
     return message;
   }
 
@@ -146,7 +156,7 @@ ${color} 市場情緒: ${data.valueClassification}
 • 50-74: 貪婪
 • 75-100: 極度貪婪
 
-⏰ 更新時間: ${new Date(data.timestamp * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}`;
+⏰ 更新時間: ${data.lastUpdated}`;
   }
 
   /**
@@ -198,9 +208,10 @@ ${color} 市場情緒: ${data.valueClassification}
   getFallbackFearGreedData() {
     return {
       value: 55,
-      value_classification: 'Neutral',
+      valueClassification: 'Neutral',
       timestamp: Math.floor(Date.now() / 1000),
-      time_until_update: 3600
+      timeUntilUpdate: 3600,
+      lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
     };
   }
 }

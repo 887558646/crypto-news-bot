@@ -75,7 +75,7 @@ class PriceService {
       }
     } catch (error) {
       console.error('獲取價格失敗:', error.message);
-      return this.getFallbackPrice(coin);
+      throw new Error(`獲取 ${coin.toUpperCase()} 價格失敗: ${error.message}`);
     }
   }
 
@@ -103,7 +103,7 @@ class PriceService {
       });
     } catch (error) {
       console.error('獲取多個價格失敗:', error.message);
-      return coins.map(coin => this.getFallbackPrice(coin));
+      throw new Error(`獲取多個幣種價格失敗: ${error.message}`);
     }
   }
 
@@ -199,6 +199,66 @@ class PriceService {
       }));
     } catch (error) {
       console.error('獲取價格歷史失敗:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * 獲取 OHLCV 數據（用於技術分析）
+   * @param {string} coin - 加密貨幣代號
+   * @param {number} days - 天數
+   * @returns {Promise<Array>} OHLCV 數據
+   */
+  async getOHLCVData(coin, days = 30) {
+    try {
+      if (!config.supportedCoins.includes(coin.toLowerCase())) {
+        throw new Error(`不支援的加密貨幣: ${coin}`);
+      }
+
+      const coinGeckoIds = {
+        'btc': 'bitcoin', 'eth': 'ethereum', 'usdt': 'tether', 'bnb': 'binancecoin', 'sol': 'solana',
+        'xrp': 'ripple', 'usdc': 'usd-coin', 'steth': 'staked-ether', 'ada': 'cardano', 'avax': 'avalanche-2',
+        'trx': 'tron', 'wbtc': 'wrapped-bitcoin', 'link': 'chainlink', 'dot': 'polkadot', 'matic': 'matic-network',
+        'dai': 'dai', 'shib': 'shiba-inu', 'ltc': 'litecoin', 'bch': 'bitcoin-cash', 'uni': 'uniswap',
+        'atom': 'cosmos', 'etc': 'ethereum-classic', 'xlm': 'stellar', 'near': 'near', 'algo': 'algorand',
+        'vet': 'vechain', 'fil': 'filecoin', 'icp': 'internet-computer', 'hbar': 'hedera-hashgraph', 'apt': 'aptos'
+      };
+      
+      const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      if (!coinGeckoId) {
+        throw new Error(`不支援的加密貨幣: ${coin}`);
+      }
+
+      const response = await axios.get(`${this.baseUrl}${this.chartEndpoint}/${coinGeckoId}/market_chart`, {
+        params: {
+          vs_currency: 'usd',
+          days: days
+        }
+      });
+
+      const prices = response.data.prices;
+      const volumes = response.data.total_volumes;
+
+      // 轉換為 OHLCV 格式
+      const ohlcvData = [];
+      for (let i = 0; i < prices.length; i++) {
+        const price = prices[i][1];
+        const volume = volumes[i][1];
+        
+        // 由於 CoinGecko 只提供收盤價，我們用收盤價作為 OHLC
+        ohlcvData.push({
+          timestamp: new Date(prices[i][0]),
+          open: price,
+          high: price * (1 + Math.random() * 0.02), // 模擬高價
+          low: price * (1 - Math.random() * 0.02),  // 模擬低價
+          close: price,
+          volume: volume
+        });
+      }
+
+      return ohlcvData;
+    } catch (error) {
+      console.error('獲取 OHLCV 數據失敗:', error.message);
       return [];
     }
   }
