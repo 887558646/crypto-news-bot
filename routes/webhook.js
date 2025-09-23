@@ -6,6 +6,7 @@ const priceService = require('../services/priceService');
 const marketService = require('../services/marketService');
 const signalService = require('../services/signalService');
 const infoService = require('../services/infoService');
+const subscriptionService = require('../services/subscriptionService');
 
 const router = express.Router();
 
@@ -17,8 +18,7 @@ const lineConfig = {
 
 const client = new line.Client(lineConfig);
 
-// 用戶訂閱狀態管理（實際應用中應使用資料庫）
-const userSubscriptions = new Map();
+// 用戶訂閱狀態管理（使用持久化服務）
 
 /**
  * 處理 LINE Webhook
@@ -136,20 +136,20 @@ async function handleSubscribeCommand(event, messageText, userId) {
     });
   }
 
-  // 獲取用戶現有訂閱
-  const currentSubscriptions = userSubscriptions.get(userId) || [];
+  // 使用訂閱服務添加訂閱
+  const success = await subscriptionService.addSubscription(userId, coin.toLowerCase());
   
-  // 檢查是否已經訂閱
-  if (currentSubscriptions.includes(coin.toLowerCase())) {
+  if (!success) {
+    // 獲取當前訂閱列表
+    const currentSubscriptions = subscriptionService.getSubscriptions(userId);
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: `⚠️ 您已經訂閱了 ${coin.toUpperCase()} 新聞推播。\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe ${coin} 可取消特定幣種訂閱。`
     });
   }
 
-  // 添加新訂閱
-  currentSubscriptions.push(coin.toLowerCase());
-  userSubscriptions.set(userId, currentSubscriptions);
+  // 獲取更新後的訂閱列表
+  const currentSubscriptions = subscriptionService.getSubscriptions(userId);
   
   return client.replyMessage(event.replyToken, {
     type: 'text',
@@ -165,18 +165,18 @@ async function handleSubscribeCommand(event, messageText, userId) {
 async function handleUnsubscribeCommand(event, messageText, userId) {
   const coin = messageText.replace('/unsubscribe', '').trim();
   
-  if (!userSubscriptions.has(userId)) {
+  const currentSubscriptions = subscriptionService.getSubscriptions(userId);
+  
+  if (currentSubscriptions.length === 0) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: '您目前沒有訂閱任何新聞推播。\n\n使用 /subscribe [幣種] 可訂閱特定幣種的新聞。'
     });
   }
-
-  const currentSubscriptions = userSubscriptions.get(userId);
   
   if (!coin) {
     // 取消所有訂閱
-    userSubscriptions.delete(userId);
+    await subscriptionService.removeSubscription(userId);
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: `✅ 已取消所有新聞推播訂閱。\n\n使用 /subscribe [幣種] 可重新訂閱。`
@@ -198,19 +198,25 @@ async function handleUnsubscribeCommand(event, messageText, userId) {
   }
   
   // 移除特定幣種訂閱
-  const updatedSubscriptions = currentSubscriptions.filter(c => c !== coin.toLowerCase());
+  const success = await subscriptionService.removeSubscription(userId, coin.toLowerCase());
   
-  if (updatedSubscriptions.length === 0) {
-    userSubscriptions.delete(userId);
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n您目前沒有訂閱任何新聞推播。\n使用 /subscribe [幣種] 可重新訂閱。`
-    });
+  if (success) {
+    const updatedSubscriptions = subscriptionService.getSubscriptions(userId);
+    if (updatedSubscriptions.length === 0) {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n您目前沒有訂閱任何新聞推播。\n使用 /subscribe [幣種] 可重新訂閱。`
+      });
+    } else {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n當前訂閱: ${updatedSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
+      });
+    }
   } else {
-    userSubscriptions.set(userId, updatedSubscriptions);
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n當前訂閱: ${updatedSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
+      text: `❌ 取消訂閱失敗，請稍後再試。`
     });
   }
 }
@@ -255,8 +261,9 @@ async function handleHelpCommand(event) {
  * @param {string} userId - 用戶 ID
  */
 async function handleStatusCommand(event, userId) {
-  if (userSubscriptions.has(userId)) {
-    const coins = userSubscriptions.get(userId);
+  const coins = subscriptionService.getSubscriptions(userId);
+  
+  if (coins.length > 0) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: `📊 您的訂閱狀態：\n✅ 已訂閱 ${coins.map(c => c.toUpperCase()).join(', ')} 新聞推播\n\n每天早上 9:00 會收到最新消息。\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
@@ -562,9 +569,7 @@ async function handleSignalCommand(event, messageText) {
  * @param {Array} news - 新聞陣列
  */
 async function broadcastNewsToSubscribers(coin, news) {
-  const subscribers = Array.from(userSubscriptions.entries())
-    .filter(([userId, subscribedCoins]) => subscribedCoins.includes(coin.toLowerCase()))
-    .map(([userId]) => userId);
+  const subscribers = subscriptionService.getSubscribersForCoin(coin.toLowerCase());
   
   if (subscribers.length === 0) {
     return;
@@ -615,4 +620,3 @@ async function broadcastDailyNews(news) {
 module.exports = router;
 module.exports.broadcastNewsToSubscribers = broadcastNewsToSubscribers;
 module.exports.broadcastDailyNews = broadcastDailyNews;
-module.exports.userSubscriptions = userSubscriptions;

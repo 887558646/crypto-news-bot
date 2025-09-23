@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const config = require('../config');
 const newsService = require('../services/newsService');
 const priceService = require('../services/priceService');
+const subscriptionService = require('../services/subscriptionService');
 
 class Scheduler {
   constructor() {
@@ -95,16 +96,16 @@ class Scheduler {
    */
   async broadcastSpecificCoinNews() {
     try {
-      const userSubscriptions = this.webhookModule.userSubscriptions;
+      const allSubscriptions = subscriptionService.getAllSubscriptions();
       
-      if (userSubscriptions.size === 0) {
+      if (allSubscriptions.size === 0) {
         console.log('沒有訂閱用戶，跳過特定幣種新聞推播');
         return;
       }
 
       // 獲取所有訂閱的幣種
       const subscribedCoins = new Set();
-      for (const [userId, coins] of userSubscriptions) {
+      for (const [userId, coins] of allSubscriptions) {
         if (Array.isArray(coins)) {
           coins.forEach(coin => subscribedCoins.add(coin));
         } else {

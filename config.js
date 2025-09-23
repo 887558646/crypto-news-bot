@@ -36,6 +36,4 @@ module.exports = {
     'trx', 'wbtc', 'link', 'dot', 'matic', 'dai', 'shib', 'ltc', 'bch', 'uni',
     'atom', 'etc', 'xlm', 'near', 'algo', 'vet', 'fil', 'icp', 'hbar', 'apt'
   ],
-  // 用戶訂閱狀態管理（實際應用中應使用資料庫）
-  userSubscriptions: new Map(),
 };

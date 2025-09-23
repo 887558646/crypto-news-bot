@@ -5,7 +5,8 @@ const webhookRouter = require('./routes/webhook');
 const scheduler = require('./utils/scheduler');
 const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
-const { userSubscriptions, broadcastDailyNews } = require('./routes/webhook'); // 引入 userSubscriptions 和 broadcastDailyNews
+const { broadcastDailyNews } = require('./routes/webhook'); // 引入 broadcastDailyNews
+const subscriptionService = require('./services/subscriptionService');
 
 const app = express();
 
@@ -34,10 +35,7 @@ app.get('/status', (req, res) => {
       uptime: process.uptime(),
     },
     scheduler: schedulerStatus,
-    subscriptions: {
-      totalUsers: userSubscriptions.size,
-      details: Array.from(userSubscriptions.entries()).map(([userId, coins]) => ({ userId, coins })),
-    },
+    subscriptions: subscriptionService.getStats(),
     apiKeys: {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',
