@@ -21,14 +21,50 @@ const userSubscriptions = new Map();
 /**
  * 處理 LINE Webhook
  */
-router.post('/', line.middleware(lineConfig), (req, res) => {
-  Promise
-    .all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
-    .catch((err) => {
-      console.error('Webhook 處理錯誤:', err);
-      res.status(500).end();
-    });
+router.post('/', (req, res) => {
+  console.log('收到 LINE Webhook 請求');
+  
+  try {
+    // 手動驗證簽名
+    const signature = req.get('X-Line-Signature');
+    if (!signature) {
+      console.log('缺少簽名，可能是測試請求');
+      return res.status(200).json({ status: 'ok' });
+    }
+
+    // 驗證簽名
+    const crypto = require('crypto');
+    const body = JSON.stringify(req.body);
+    const hash = crypto
+      .createHmac('SHA256', lineConfig.channelSecret)
+      .update(body)
+      .digest('base64');
+
+    if (hash !== signature) {
+      console.log('簽名驗證失敗');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    console.log('簽名驗證成功');
+    
+    // 確保回應狀態碼 200
+    res.status(200).json({ status: 'ok' });
+    
+    // 異步處理事件
+    if (req.body && req.body.events) {
+      Promise
+        .all(req.body.events.map(handleEvent))
+        .then((result) => {
+          console.log('事件處理完成:', result.length, '個事件');
+        })
+        .catch((err) => {
+          console.error('Webhook 處理錯誤:', err);
+        });
+    }
+  } catch (error) {
+    console.error('Webhook 處理異常:', error);
+    res.status(200).json({ status: 'ok' });
+  }
 });
 
 /**
