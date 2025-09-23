@@ -38,7 +38,7 @@ class Scheduler {
     });
 
     // 每小時推播特定幣種新聞（如果有訂閱用戶）
-    cron.schedule('0 * * * *', async () => {
+    cron.schedule(config.schedule.specificNewsTime, async () => {
       console.log('檢查特定幣種新聞推播...');
       await this.broadcastSpecificCoinNews();
     }, {
@@ -46,7 +46,7 @@ class Scheduler {
     });
 
     // 每天 18:00 推播市場總結
-    cron.schedule('0 18 * * *', async () => {
+    cron.schedule(config.schedule.marketSummaryTime, async () => {
       console.log('開始執行市場總結推播...');
       await this.broadcastMarketSummary();
     }, {

@@ -25,6 +25,11 @@ module.exports = {
     port: process.env.PORT || 3000,
     webhookPath: '/webhook',
   },
+  schedule: {
+    newsPushTime: '0 9 * * *', // 每天早上 9:00
+    marketSummaryTime: '0 18 * * *', // 每天 18:00
+    specificNewsTime: '0 * * * *', // 每小時
+  },
   supportedCoins: ['btc', 'eth', 'sol', 'bnb', 'sui'],
   // 用戶訂閱狀態管理（實際應用中應使用資料庫）
   userSubscriptions: new Map(),
