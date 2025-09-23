@@ -3,7 +3,9 @@ const config = require('../config');
 
 class PriceService {
   constructor() {
-    this.baseUrl = config.apis.coinGecko.baseUrl;
+    this.baseUrl = config.coingecko.baseUrl;
+    this.priceEndpoint = config.coingecko.priceEndpoint;
+    this.chartEndpoint = config.coingecko.chartEndpoint;
   }
 
   /**
@@ -13,15 +15,13 @@ class PriceService {
    */
   async getCoinPrice(coin) {
     try {
-      const coinId = config.supportedCoins[coin.toLowerCase()];
-      
-      if (!coinId) {
+      if (!config.supportedCoins.includes(coin.toLowerCase())) {
         throw new Error(`不支援的加密貨幣: ${coin}`);
       }
 
-      const response = await axios.get(`${this.baseUrl}/simple/price`, {
+      const response = await axios.get(`${this.baseUrl}${this.priceEndpoint}`, {
         params: {
-          ids: coinId,
+          ids: coin.toLowerCase(),
           vs_currencies: 'usd,twd',
           include_24hr_change: true,
           include_24hr_vol: true,
@@ -29,8 +29,8 @@ class PriceService {
         }
       });
 
-      if (response.data[coinId]) {
-        return this.formatPriceData(coin.toUpperCase(), response.data[coinId]);
+      if (response.data[coin.toLowerCase()]) {
+        return this.formatPriceData(coin.toUpperCase(), response.data[coin.toLowerCase()]);
       } else {
         throw new Error('無法獲取價格資料');
       }
@@ -47,9 +47,9 @@ class PriceService {
    */
   async getMultipleCoinPrices(coins) {
     try {
-      const coinIds = coins.map(coin => config.supportedCoins[coin.toLowerCase()]).join(',');
+      const coinIds = coins.filter(coin => config.supportedCoins.includes(coin.toLowerCase())).join(',');
       
-      const response = await axios.get(`${this.baseUrl}/simple/price`, {
+      const response = await axios.get(`${this.baseUrl}${this.priceEndpoint}`, {
         params: {
           ids: coinIds,
           vs_currencies: 'usd,twd',
@@ -60,10 +60,7 @@ class PriceService {
       });
 
       return Object.keys(response.data).map(coinId => {
-        const coin = Object.keys(config.supportedCoins).find(
-          key => config.supportedCoins[key] === coinId
-        );
-        return this.formatPriceData(coin.toUpperCase(), response.data[coinId]);
+        return this.formatPriceData(coinId.toUpperCase(), response.data[coinId]);
       });
     } catch (error) {
       console.error('獲取多個價格失敗:', error.message);
@@ -89,6 +86,23 @@ class PriceService {
       marketCap: data.usd_market_cap,
       lastUpdated: new Date().toLocaleString('zh-TW')
     };
+  }
+
+  /**
+   * 格式化價格訊息
+   * @param {Object} priceData - 價格資料
+   * @returns {string} 格式化後的價格訊息
+   */
+  formatPrice(priceData) {
+    if (!priceData) {
+      return '無法獲取價格資訊';
+    }
+
+    const { symbol, price, change24h } = priceData;
+    const changeEmoji = change24h >= 0 ? '📈' : '📉';
+    const changeText = change24h >= 0 ? `+${change24h.toFixed(2)}%` : `${change24h.toFixed(2)}%`;
+
+    return `${symbol} 即時價格\n\n💵 USD: $${price.usd.toLocaleString()}\n💱 TWD: NT$${price.twd.toLocaleString()}\n\n${changeEmoji} 24h 變化: ${changeText}`;
   }
 
   /**
@@ -129,13 +143,11 @@ class PriceService {
    */
   async getPriceHistory(coin, days = 7) {
     try {
-      const coinId = config.supportedCoins[coin.toLowerCase()];
-      
-      if (!coinId) {
+      if (!config.supportedCoins.includes(coin.toLowerCase())) {
         throw new Error(`不支援的加密貨幣: ${coin}`);
       }
 
-      const response = await axios.get(`${this.baseUrl}/coins/${coinId}/market_chart`, {
+      const response = await axios.get(`${this.baseUrl}${this.chartEndpoint}/${coin.toLowerCase()}/market_chart`, {
         params: {
           vs_currency: 'usd',
           days: days
