@@ -40,12 +40,22 @@ class NewsService {
           apiKey: this.apiKey
         },
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'en-US,en;q=0.9'
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://newsapi.org/',
+          'Origin': 'https://newsapi.org',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        timeout: 15000,
-        httpVersion: '1.1'
+        timeout: 20000,
+        httpVersion: '1.1',
+        maxRedirects: 5
       });
 
       if (response.data.status === 'ok') {
@@ -53,10 +63,15 @@ class NewsService {
       } else {
         throw new Error('NewsAPI 回應錯誤');
       }
-    } catch (error) {
-      console.error('獲取新聞失敗:', error.message);
-      throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
-    }
+      } catch (error) {
+        console.error('獲取新聞失敗:', error.message);
+        // 如果是 403 錯誤，嘗試使用備用新聞源
+        if (error.message.includes('403') || error.message.includes('426')) {
+          console.log('🔄 嘗試使用備用新聞源...');
+          return this.getFallbackNews(limit, coin);
+        }
+        throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
+      }
   }
 
   /**
@@ -125,12 +140,22 @@ class NewsService {
           pageSize: count,
         },
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'en-US,en;q=0.9'
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://newsapi.org/',
+          'Origin': 'https://newsapi.org',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        timeout: 15000,
-        httpVersion: '1.1'
+        timeout: 20000,
+        httpVersion: '1.1',
+        maxRedirects: 5
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇文章`);
@@ -177,12 +202,22 @@ class NewsService {
           pageSize: count,
         },
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'en-US,en;q=0.9'
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://newsapi.org/',
+          'Origin': 'https://newsapi.org',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        timeout: 15000,
-        httpVersion: '1.1'
+        timeout: 20000,
+        httpVersion: '1.1',
+        maxRedirects: 5
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇熱門新聞`);
@@ -198,6 +233,11 @@ class NewsService {
       return this.getFallbackNews(count);
     } catch (error) {
       console.error('獲取新聞失敗:', error.message);
+      // 如果是 403 錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426')) {
+        console.log('🔄 嘗試使用備用新聞源...');
+        return this.getFallbackNews(count, 'cryptocurrency');
+      }
       throw new Error(`獲取熱門新聞失敗: ${error.message}`);
     }
   }
@@ -227,12 +267,22 @@ class NewsService {
           pageSize: count,
         },
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'en-US,en;q=0.9'
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://newsapi.org/',
+          'Origin': 'https://newsapi.org',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         },
-        timeout: 15000,
-        httpVersion: '1.1'
+        timeout: 20000,
+        httpVersion: '1.1',
+        maxRedirects: 5
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇相關新聞`);
@@ -250,6 +300,11 @@ class NewsService {
       console.error(`搜尋 ${keyword} 新聞失敗:`, error.message);
       if (error.response) {
         console.error('API 回應:', error.response.status, error.response.data);
+      }
+      // 如果是 403 錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426')) {
+        console.log('🔄 嘗試使用備用新聞源...');
+        return this.getFallbackSearchNews(keyword, count);
       }
       throw new Error(`搜尋 ${keyword} 新聞失敗: ${error.message}`);
     }
