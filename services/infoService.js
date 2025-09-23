@@ -156,7 +156,9 @@ class InfoService {
    */
   formatCoinInfoCard(priceData, coinInfo) {
     const { name, symbol, marketCapRank, marketCap, volume24h, genesisDate, description, lastUpdated } = coinInfo;
-    const { priceUSD, priceTWD, change24h, marketCap: priceMarketCap } = priceData;
+    const { price, change24h, marketCap: priceMarketCap } = priceData;
+    const priceUSD = price?.usd;
+    const priceTWD = price?.twd;
 
     let message = `📌 ${name} (${symbol}) 資訊卡\n\n`;
     
@@ -180,8 +182,8 @@ class InfoService {
     // 簡介
     message += `📝 簡介\n${description}\n\n`;
     
-    // 白皮書連結
-    message += `📄 白皮書\n`;
+    // 詳細資訊連結
+    message += `📄 詳細資訊\n`;
     message += `https://coinmarketcap.com/currencies/${this.getCoinSlug(symbol)}/\n\n`;
     
     // 更新時間
