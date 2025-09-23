@@ -44,9 +44,8 @@ class BackupNewsService {
       }
     }
 
-    // 如果所有備用源都失敗，返回基本的加密貨幣新聞
-    console.log('🔄 使用基本備用新聞...');
-    return this.getBasicCryptoNews(query, limit);
+    // 如果所有備用源都失敗，拋出錯誤
+    throw new Error('所有備用新聞源都無法使用');
   }
 
   /**
@@ -95,69 +94,6 @@ class BackupNewsService {
     return this.getCryptoNews('cryptocurrency bitcoin ethereum', limit);
   }
 
-  /**
-   * 獲取基本加密貨幣新聞 (當所有 API 都失敗時使用)
-   * @param {string} query - 搜尋關鍵字
-   * @param {number} limit - 新聞數量
-   * @returns {Array} 基本新聞列表
-   */
-  getBasicCryptoNews(query, limit) {
-    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-    
-    const basicNews = [
-      {
-        title: '加密貨幣市場持續波動，投資者需謹慎',
-        description: '加密貨幣市場今日出現波動，專家建議投資者保持謹慎態度，做好風險管理。',
-        url: 'https://coinmarketcap.com/',
-        publishedAt: now,
-        source: 'Crypto News Bot'
-      },
-      {
-        title: '比特幣價格走勢分析',
-        description: '比特幣價格在近期出現波動，技術分析顯示市場情緒複雜，建議關注關鍵支撐位。',
-        url: 'https://coinmarketcap.com/currencies/bitcoin/',
-        publishedAt: now,
-        source: 'Crypto News Bot'
-      },
-      {
-        title: '以太坊生態系統持續發展',
-        description: '以太坊網絡持續升級，DeFi 和 NFT 生態系統保持活躍，開發者活動增加。',
-        url: 'https://coinmarketcap.com/currencies/ethereum/',
-        publishedAt: now,
-        source: 'Crypto News Bot'
-      },
-      {
-        title: '加密貨幣監管動態更新',
-        description: '全球各國對加密貨幣的監管政策持續演進，投資者需關注相關法規變化。',
-        url: 'https://coinmarketcap.com/',
-        publishedAt: now,
-        source: 'Crypto News Bot'
-      },
-      {
-        title: '區塊鏈技術應用擴展',
-        description: '區塊鏈技術在各行業的應用持續擴展，從金融到供應鏈管理都有新進展。',
-        url: 'https://coinmarketcap.com/',
-        publishedAt: now,
-        source: 'Crypto News Bot'
-      }
-    ];
-
-    // 根據查詢關鍵字過濾相關新聞
-    let filteredNews = basicNews;
-    if (query.toLowerCase().includes('bitcoin') || query.toLowerCase().includes('btc')) {
-      filteredNews = basicNews.filter(news => 
-        news.title.toLowerCase().includes('比特幣') || 
-        news.title.toLowerCase().includes('bitcoin')
-      );
-    } else if (query.toLowerCase().includes('ethereum') || query.toLowerCase().includes('eth')) {
-      filteredNews = basicNews.filter(news => 
-        news.title.toLowerCase().includes('以太坊') || 
-        news.title.toLowerCase().includes('ethereum')
-      );
-    }
-
-    return filteredNews.slice(0, limit);
-  }
 }
 
 module.exports = new BackupNewsService();

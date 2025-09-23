@@ -101,6 +101,12 @@ async function handleEvent(event) {
            return await handleNewsCommand(event);
          } else if (messageText.startsWith('/signal ')) {
            return await handleSignalCommand(event, messageText);
+         } else if (messageText === '/signal') {
+           return await handleSignalHelpCommand(event);
+         } else if (messageText === '/token') {
+           return await handleTokenHelpCommand(event);
+         } else if (messageText.startsWith('/') && isValidCoinSymbol(messageText.substring(1))) {
+           return await handleCoinQueryHelpCommand(event, messageText.substring(1));
          } else if (isValidCoinSymbol(messageText)) {
            return await handleCoinQuery(event, messageText);
          } else {
@@ -295,6 +301,67 @@ async function handleCoinQuery(event, coin) {
 }
 
 /**
+ * 處理技術分析幫助指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleSignalHelpCommand(event) {
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: `📈 技術分析功能說明
+
+請輸入 /signal [幣種] 查詢幣種簡易技術分析
+
+範例：
+/signal btc - 查詢 BTC 技術分析
+/signal eth - 查詢 ETH 技術分析
+/signal sol - 查詢 SOL 技術分析
+
+支援的幣種：${config.supportedCoins.join(', ')}`
+  });
+}
+
+/**
+ * 處理幣種查詢幫助指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleTokenHelpCommand(event) {
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: `💰 幣種查詢功能說明
+
+請直接輸入 [幣種] 查詢幣種相關資訊
+
+範例：
+btc - 查詢 BTC 完整資訊卡
+eth - 查詢 ETH 完整資訊卡
+sol - 查詢 SOL 完整資訊卡
+
+支援的幣種：${config.supportedCoins.join(', ')}`
+  });
+}
+
+/**
+ * 處理幣種查詢幫助指令 (舊版本，保留向後兼容)
+ * @param {Object} event - LINE 事件
+ * @param {string} coin - 幣種代號
+ */
+async function handleCoinQueryHelpCommand(event, coin) {
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: `💰 幣種查詢功能說明
+
+請直接輸入 [幣種] 查詢幣種相關資訊
+
+範例：
+btc - 查詢 BTC 完整資訊卡
+eth - 查詢 ETH 完整資訊卡
+sol - 查詢 SOL 完整資訊卡
+
+支援的幣種：${config.supportedCoins.join(', ')}`
+  });
+}
+
+/**
  * 處理預設訊息
  * @param {Object} event - LINE 事件
  */
@@ -426,7 +493,7 @@ async function handleNewsCommand(event) {
     const news = await newsService.getTopCryptoNews(5);
     const newsText = newsService.formatNewsMessage(news);
     
-    const message = `📰 今日熱門加密貨幣新聞\n\n${newsText}`;
+    const message = `📰 今日熱門加密貨幣新聞\n\n${newsText}\n\n🔔 訂閱幣種新聞功能\n\n想要定期收到特定幣種的新聞嗎？\n\n• 使用 /subscribe [幣種] 訂閱特定幣種新聞\n• 使用 /unsubscribe [幣種] 取消特定幣種訂閱\n• 使用 /unsubscribe 取消所有訂閱\n• 使用 /status 查看當前訂閱狀態\n\n每天早上 9:00 會自動推播您訂閱的幣種新聞！`;
     
     return client.replyMessage(event.replyToken, {
       type: 'text',

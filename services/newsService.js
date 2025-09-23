@@ -1,5 +1,6 @@
 const axios = require('axios');
 const config = require('../config');
+const backupNewsService = require('./backupNewsService');
 
 class NewsService {
   constructor() {
@@ -63,10 +64,15 @@ class NewsService {
       } else {
         throw new Error('NewsAPI 回應錯誤');
       }
-      } catch (error) {
-        console.error('獲取新聞失敗:', error.message);
-        throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
+    } catch (error) {
+      console.error('獲取新聞失敗:', error.message);
+      // 如果是 403 或 426 錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426')) {
+        console.log('🔄 嘗試使用備用新聞源...');
+        return backupNewsService.getCryptoNews(coin, limit);
       }
+      throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
+    }
   }
 
   /**
@@ -84,23 +90,6 @@ class NewsService {
     }));
   }
 
-  /**
-   * 備用新聞資料（當 API 失敗時使用）
-   * @param {number} count - 新聞數量
-   * @param {string} keyword - 關鍵字
-   * @returns {Array} 備用新聞
-   */
-  getFallbackNews(count, keyword = '加密貨幣') {
-    console.log('使用備用新聞');
-    const fallback = [
-      { title: `${keyword}市場動態更新`, url: 'https://example.com/crypto-update', source: '假新聞源', publishedAt: new Date().toISOString() },
-      { title: `${keyword}技術分析報告`, url: 'https://example.com/tech-report', source: '假新聞源', publishedAt: new Date().toISOString() },
-      { title: `${keyword}最新政策影響`, url: 'https://example.com/policy-impact', source: '假新聞源', publishedAt: new Date().toISOString() },
-      { title: `${keyword}投資者情緒分析`, url: 'https://example.com/investor-sentiment', source: '假新聞源', publishedAt: new Date().toISOString() },
-      { title: `${keyword}區塊鏈創新應用`, url: 'https://example.com/blockchain-innovation', source: '假新聞源', publishedAt: new Date().toISOString() },
-    ];
-    return fallback.slice(0, count);
-  }
 
   /**
    * 獲取每日新聞摘要
@@ -163,13 +152,18 @@ class NewsService {
           publishedAt: article.publishedAt,
         }));
       }
-      return this.getFallbackNews(count, keyword);
+      throw new Error('沒有找到相關新聞');
     } catch (error) {
       console.error(`獲取 ${keyword} 新聞失敗:`, error.message);
       if (error.response) {
         console.error('API 回應:', error.response.status, error.response.data);
       }
-      return this.getFallbackNews(count, keyword);
+      // 如果是 403 或 426 錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426')) {
+        console.log('🔄 嘗試使用備用新聞源...');
+        return backupNewsService.getCryptoNews(keyword, count);
+      }
+      throw new Error(`獲取 ${keyword} 新聞失敗: ${error.message}`);
     }
   }
 
@@ -225,9 +219,14 @@ class NewsService {
           publishedAt: new Date(article.publishedAt).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
         }));
       }
-      return this.getFallbackNews(count);
+      throw new Error('沒有找到相關新聞');
     } catch (error) {
       console.error('獲取新聞失敗:', error.message);
+      // 如果是 403 或 426 錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426')) {
+        console.log('🔄 嘗試使用備用新聞源...');
+        return backupNewsService.getTopCryptoNews(count);
+      }
       throw new Error(`獲取熱門新聞失敗: ${error.message}`);
     }
   }
