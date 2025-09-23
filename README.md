@@ -29,6 +29,7 @@
 - **精確取消**：使用 `/unsubscribe [幣種]` 取消特定幣種訂閱
 - **全部取消**：使用 `/unsubscribe` 取消所有訂閱
 - **狀態查詢**：使用 `/status` 查看當前訂閱狀態
+- **持久化儲存**：訂閱狀態自動保存到 JSON 檔案，重啟後不會遺失
 
 ## 🛠 技術棧
 
@@ -55,7 +56,8 @@ crypto-news-bot/
 │   ├── priceService.js   # 價格服務
 │   ├── marketService.js  # 市場分析服務
 │   ├── signalService.js  # 技術分析服務
-│   └── infoService.js    # 幣種資訊服務
+│   ├── infoService.js    # 幣種資訊服務
+│   └── subscriptionService.js # 訂閱管理服務
 ├── routes/               # 路由層
 │   └── webhook.js        # LINE webhook 處理
 └── utils/                # 工具層
@@ -272,6 +274,18 @@ npm run dev
 ```
 
 ## 📝 更新日誌
+
+### v2.3.0 (2025-09-23)
+- ✅ **重大更新**:
+  - 實作訂閱狀態持久化儲存
+  - 使用 JSON 檔案保存用戶訂閱資料
+  - 解決 Render 重啟後訂閱重置問題
+  - 新增訂閱統計功能
+
+- 🔧 **技術改進**:
+  - 創建 `subscriptionService.js` 訂閱管理服務
+  - 優化訂閱資料結構和處理邏輯
+  - 改善系統穩定性和可靠性
 
 ### v2.2.0 (2025-09-23)
 - ✅ **功能優化**:
