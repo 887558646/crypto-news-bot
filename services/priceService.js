@@ -19,9 +19,23 @@ class PriceService {
         throw new Error(`不支援的加密貨幣: ${coin}`);
       }
 
+      // 映射到 CoinGecko 的實際 ID
+      const coinGeckoIds = {
+        'btc': 'bitcoin',
+        'eth': 'ethereum',
+        'sol': 'solana',
+        'bnb': 'binancecoin',
+        'sui': 'sui'
+      };
+
+      const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      if (!coinGeckoId) {
+        throw new Error(`不支援的加密貨幣: ${coin}`);
+      }
+
       const response = await axios.get(`${this.baseUrl}${this.priceEndpoint}`, {
         params: {
-          ids: coin.toLowerCase(),
+          ids: coinGeckoId,
           vs_currencies: 'usd,twd',
           include_24hr_change: true,
           include_24hr_vol: true,
@@ -29,8 +43,8 @@ class PriceService {
         }
       });
 
-      if (response.data[coin.toLowerCase()]) {
-        return this.formatPriceData(coin.toUpperCase(), response.data[coin.toLowerCase()]);
+      if (response.data[coinGeckoId]) {
+        return this.formatPriceData(coin.toUpperCase(), response.data[coinGeckoId]);
       } else {
         throw new Error('無法獲取價格資料');
       }
