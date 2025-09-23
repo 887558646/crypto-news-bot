@@ -70,17 +70,20 @@ class MarketService {
    */
   async getFearGreedIndex() {
     try {
-      // 使用 Alternative.me API 替代 CoinGecko API
-      const response = await axios.get('https://api.alternative.me/fng/');
+      const response = await axios.get(`${this.baseUrl}/global`, {
+        params: {
+          x_cg_demo_api_key: config.coingecko.apiKey
+        }
+      });
       
-      if (response.data.data && response.data.data.length > 0) {
-        const latest = response.data.data[0];
+      if (response.data.data) {
+        const fearGreed = response.data.data.fear_and_greed_index;
         return {
-          value: parseInt(latest.value),
-          valueClassification: latest.value_classification,
-          timestamp: parseInt(latest.timestamp),
-          timeUntilUpdate: parseInt(latest.time_until_update),
-          lastUpdated: new Date(parseInt(latest.timestamp) * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+          value: fearGreed.value,
+          valueClassification: fearGreed.value_classification,
+          timestamp: fearGreed.timestamp,
+          timeUntilUpdate: fearGreed.time_until_update,
+          lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
         };
       }
       throw new Error('無法獲取恐懼貪婪指數');
@@ -95,13 +98,13 @@ class MarketService {
    * @param {Object} data - 市場數據
    * @returns {string} 格式化訊息
    */
-  formatMarketOverview(data) {
+  formatMarketOverview(data, fearGreedData = null) {
     const marketCap = (data.totalMarketCap / 1e12).toFixed(2);
     const volume = (data.totalVolume / 1e9).toFixed(2);
     const changeEmoji = data.marketCapChange >= 0 ? '📈' : '📉';
     const changeText = data.marketCapChange >= 0 ? `+${data.marketCapChange.toFixed(2)}%` : `${data.marketCapChange.toFixed(2)}%`;
 
-    return `🌍 全球加密貨幣市場總覽
+    let message = `🌍 全球加密貨幣市場總覽
 
 💰 總市值: $${marketCap}T (${changeEmoji} ${changeText})
 📊 24h 交易量: $${volume}B
@@ -110,9 +113,22 @@ class MarketService {
 🏆 市值佔比:
 • BTC: ${data.marketCapPercentage.btc.toFixed(1)}%
 • ETH: ${data.marketCapPercentage.eth.toFixed(1)}%
-• 其他: ${(100 - data.marketCapPercentage.btc - data.marketCapPercentage.eth).toFixed(1)}%
+• 其他: ${(100 - data.marketCapPercentage.btc - data.marketCapPercentage.eth).toFixed(1)}%`;
+
+    // 添加恐懼貪婪指數
+    if (fearGreedData) {
+      const fearGreedEmoji = fearGreedData.value >= 50 ? '😊' : '😰';
+      message += `
+
+😨 恐懼貪婪指數: ${fearGreedData.value}/100 ${fearGreedEmoji}
+📊 市場情緒: ${fearGreedData.valueClassification}`;
+    }
+
+    message += `
 
 ⏰ 更新時間: ${data.lastUpdated}`;
+
+    return message;
   }
 
   /**

@@ -95,8 +95,6 @@ async function handleEvent(event) {
            return await handleMarketCommand(event);
          } else if (messageText === '/trending') {
            return await handleTrendingCommand(event);
-         } else if (messageText === '/feargreed') {
-           return await handleFearGreedCommand(event);
          } else if (messageText === '/news') {
            return await handleNewsCommand(event);
          } else if (messageText.startsWith('/signal ')) {
@@ -233,9 +231,8 @@ async function handleHelpCommand(event) {
     /unsubscribe - 取消所有訂閱
 
      📈 市場功能：
-     /market - 全球市場總覽
+     /market - 全球市場總覽 (包含恐懼貪婪指數)
      /trending - 趨勢幣種
-     /feargreed - 恐懼貪婪指數
      /news - 今日熱門新聞
      /signal [幣種] - 技術分析信號
 
@@ -428,7 +425,16 @@ function formatNewsMessage(news) {
 async function handleMarketCommand(event) {
   try {
     const marketData = await marketService.getMarketOverview();
-    const marketText = marketService.formatMarketOverview(marketData);
+    
+    // 嘗試獲取恐懼貪婪指數
+    let fearGreedData = null;
+    try {
+      fearGreedData = await marketService.getFearGreedIndex();
+    } catch (error) {
+      console.log('恐懼貪婪指數獲取失敗，將不顯示該資訊');
+    }
+    
+    const marketText = marketService.formatMarketOverview(marketData, fearGreedData);
     
     return client.replyMessage(event.replyToken, {
       type: 'text',
