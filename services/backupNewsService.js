@@ -85,15 +85,6 @@ class BackupNewsService {
   }
 
 
-  /**
-   * 搜尋關鍵字新聞
-   * @param {string} keyword - 搜尋關鍵字
-   * @param {number} limit - 新聞數量
-   * @returns {Promise<Array>} 新聞列表
-   */
-  async searchNewsByKeyword(keyword, limit = 5) {
-    return this.getCryptoNews(keyword, limit);
-  }
 
   /**
    * 獲取熱門新聞

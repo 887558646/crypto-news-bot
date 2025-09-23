@@ -103,8 +103,6 @@ async function handleEvent(event) {
            return await handleSignalCommand(event, messageText);
          } else if (messageText.startsWith('/info ')) {
            return await handleInfoCommand(event, messageText);
-         } else if (messageText.startsWith('/searchnews ')) {
-           return await handleSearchNewsCommand(event, messageText);
          } else if (isValidCoinSymbol(messageText)) {
            return await handleCoinQuery(event, messageText);
          } else {
@@ -188,7 +186,6 @@ async function handleHelpCommand(event) {
      /news - 今日熱門新聞
      /signal [幣種] - 技術分析信號
      /info [幣種] - 幣種資訊卡
-     /searchnews [關鍵字] - 關鍵字新聞搜尋
 
      ℹ️ 其他指令：
      /help - 顯示此說明
@@ -233,20 +230,12 @@ async function handleCoinQuery(event, coin) {
     // 獲取價格資訊
     const priceData = await priceService.getCoinPrice(coin);
     
-    // 獲取最新新聞
-    const news = await newsService.getCryptoNews(coin, 2);
-    
     // 格式化價格資訊
     const priceText = priceService.formatPrice(priceData);
     
-    // 格式化新聞資訊
-    const newsText = newsService.formatNewsMessage(news);
-    
-    const responseText = `${priceText}\n\n${newsText}`;
-    
     return client.replyMessage(event.replyToken, {
       type: 'text',
-      text: responseText
+      text: priceText
     });
   } catch (error) {
     return client.replyMessage(event.replyToken, {
@@ -482,45 +471,6 @@ async function handleInfoCommand(event, messageText) {
   }
 }
 
-/**
- * 處理關鍵字新聞搜尋指令
- * @param {Object} event - LINE 事件
- * @param {string} messageText - 訊息文字
- */
-async function handleSearchNewsCommand(event, messageText) {
-  try {
-    const keyword = messageText.replace('/searchnews ', '').trim();
-    
-    if (!keyword) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '請輸入搜尋關鍵字，例如：/searchnews defi'
-      });
-    }
-
-    if (keyword.length < 2) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: '關鍵字至少需要2個字符，例如：/searchnews defi'
-      });
-    }
-
-    // 搜尋關鍵字新聞
-    const news = await newsService.searchNewsByKeyword(keyword, 5);
-    const newsText = newsService.formatSearchNewsMessage(keyword, news);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: newsText
-    });
-  } catch (error) {
-    console.error('關鍵字新聞搜尋處理失敗:', error);
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '無法搜尋新聞，請稍後再試。'
-    });
-  }
-}
 
 /**
  * 推播訊息給所有訂閱用戶

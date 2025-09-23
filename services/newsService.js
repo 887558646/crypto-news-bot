@@ -243,73 +243,6 @@ class NewsService {
     }
   }
 
-  /**
-   * 根據關鍵字搜尋新聞
-   * @param {string} keyword - 搜尋關鍵字
-   * @param {number} count - 新聞數量
-   * @returns {Promise<Array>} 新聞列表
-   */
-  async searchNewsByKeyword(keyword, count = 5) {
-    try {
-      console.log(`🔍 搜尋關鍵字新聞: ${keyword}`);
-
-      // 計算一天前的時間
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-      const fromDate = oneDayAgo.toISOString().split('T')[0];
-
-      const response = await axios.get(`${this.baseUrl}${this.everythingEndpoint}`, {
-        params: {
-          q: keyword,
-          language: 'en',
-          sortBy: 'publishedAt',
-          from: fromDate,
-          apiKey: this.apiKey,
-          pageSize: count,
-        },
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9,zh-TW;q=0.8,zh;q=0.7',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://newsapi.org/',
-          'Origin': 'https://newsapi.org',
-          'Connection': 'keep-alive',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-origin',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
-        timeout: 20000,
-        httpVersion: '1.1',
-        maxRedirects: 5
-      });
-
-      console.log(`📰 找到 ${response.data.articles?.length || 0} 篇相關新聞`);
-
-      if (response.data.articles && response.data.articles.length > 0) {
-        return response.data.articles.map(article => ({
-          title: this.truncateTitle(article.title),
-          url: article.url,
-          source: article.source.name,
-          publishedAt: new Date(article.publishedAt).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-        }));
-      }
-      return this.getFallbackSearchNews(keyword, count);
-    } catch (error) {
-      console.error(`搜尋 ${keyword} 新聞失敗:`, error.message);
-      if (error.response) {
-        console.error('API 回應:', error.response.status, error.response.data);
-      }
-      // 如果是 403 錯誤，嘗試使用備用新聞源
-      if (error.message.includes('403') || error.message.includes('426')) {
-        console.log('🔄 嘗試使用備用新聞源...');
-        return backupNewsService.searchNewsByKeyword(keyword, count);
-      }
-      throw new Error(`搜尋 ${keyword} 新聞失敗: ${error.message}`);
-    }
-  }
 
   /**
    * 截斷過長的新聞標題
@@ -323,69 +256,7 @@ class NewsService {
     return title.substring(0, maxLength) + '...';
   }
 
-  /**
-   * 格式化關鍵字搜尋新聞訊息
-   * @param {string} keyword - 搜尋關鍵字
-   * @param {Array} newsArticles - 新聞文章陣列
-   * @returns {string} 格式化後的新聞訊息
-   */
-  formatSearchNewsMessage(keyword, newsArticles) {
-    if (!newsArticles || newsArticles.length === 0) {
-      return `📰 關鍵字新聞搜尋：${keyword}\n\n沒有找到相關新聞，請嘗試其他關鍵字。`;
-    }
 
-    let message = `📰 關鍵字新聞搜尋：${keyword}\n\n`;
-    
-    newsArticles.forEach((news, index) => {
-      message += `${index + 1}. ${news.title} (來源: ${news.source})\n`;
-      message += `🔗 ${news.url}\n\n`;
-    });
-
-    return message.trim();
-  }
-
-  /**
-   * 備用搜尋新聞資料
-   * @param {string} keyword - 關鍵字
-   * @param {number} count - 新聞數量
-   * @returns {Array} 備用新聞
-   */
-  getFallbackSearchNews(keyword, count) {
-    console.log(`使用備用搜尋新聞: ${keyword}`);
-    const fallback = [
-      { 
-        title: `${keyword} 市場最新動態分析`, 
-        url: 'https://example.com/crypto-news-1', 
-        source: 'CryptoNews', 
-        publishedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      },
-      { 
-        title: `${keyword} 技術發展趨勢報告`, 
-        url: 'https://example.com/crypto-news-2', 
-        source: 'BlockchainDaily', 
-        publishedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      },
-      { 
-        title: `${keyword} 投資機會與風險評估`, 
-        url: 'https://example.com/crypto-news-3', 
-        source: 'CryptoInsider', 
-        publishedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      },
-      { 
-        title: `${keyword} 監管政策最新進展`, 
-        url: 'https://example.com/crypto-news-4', 
-        source: 'RegulatoryWatch', 
-        publishedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      },
-      { 
-        title: `${keyword} 社群討論熱點話題`, 
-        url: 'https://example.com/crypto-news-5', 
-        source: 'CommunityVoice', 
-        publishedAt: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
-      },
-    ];
-    return fallback.slice(0, count);
-  }
 
   /**
    * 格式化新聞訊息
