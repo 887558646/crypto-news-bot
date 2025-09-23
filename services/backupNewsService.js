@@ -3,17 +3,15 @@ const config = require('../config');
 
 /**
  * 備用新聞服務
- * 整合多個免費新聞 API 作為 NewsAPI 的備用方案
+ * 使用 NewsData.io 作為 NewsAPI 的備用方案
  */
 class BackupNewsService {
   constructor() {
     this.newsDataApiKey = process.env.NEWSDATA_API_KEY;
-    this.mediastackApiKey = process.env.MEDIASTACK_API_KEY;
-    this.bingApiKey = process.env.BING_API_KEY;
   }
 
   /**
-   * 獲取加密貨幣新聞 (多個備用源)
+   * 獲取加密貨幣新聞 (備用源)
    * @param {string} coin - 幣種名稱
    * @param {number} limit - 新聞數量
    * @returns {Promise<Array>} 新聞列表
@@ -21,11 +19,9 @@ class BackupNewsService {
   async getCryptoNews(coin = null, limit = 3) {
     const query = coin ? `${coin} cryptocurrency` : 'cryptocurrency bitcoin ethereum';
     
-    // 嘗試多個備用源
+    // 嘗試備用源
     const sources = [
-      () => this.getNewsFromNewsData(query, limit),
-      () => this.getNewsFromMediastack(query, limit),
-      () => this.getNewsFromBing(query, limit)
+      () => this.getNewsFromNewsData(query, limit)
     ];
 
     for (const source of sources) {
@@ -79,79 +75,6 @@ class BackupNewsService {
     throw new Error('NewsData.io 無有效新聞');
   }
 
-  /**
-   * 從 Mediastack 獲取新聞
-   * @param {string} query - 搜尋關鍵字
-   * @param {number} limit - 新聞數量
-   * @returns {Promise<Array>} 新聞列表
-   */
-  async getNewsFromMediastack(query, limit) {
-    if (!this.mediastackApiKey) {
-      throw new Error('Mediastack API Key 未配置');
-    }
-
-    const response = await axios.get('http://api.mediastack.com/v1/news', {
-      params: {
-        access_key: this.mediastackApiKey,
-        keywords: query,
-        languages: 'en',
-        categories: 'business,technology',
-        limit: limit,
-        sort: 'published_desc'
-      },
-      timeout: 10000
-    });
-
-    if (response.data.data) {
-      return response.data.data.map(article => ({
-        title: article.title,
-        description: article.description,
-        url: article.url,
-        publishedAt: new Date(article.published_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-        source: article.source || 'Mediastack'
-      }));
-    }
-
-    throw new Error('Mediastack 無有效新聞');
-  }
-
-  /**
-   * 從 Bing 新聞搜索獲取新聞
-   * @param {string} query - 搜尋關鍵字
-   * @param {number} limit - 新聞數量
-   * @returns {Promise<Array>} 新聞列表
-   */
-  async getNewsFromBing(query, limit) {
-    if (!this.bingApiKey) {
-      throw new Error('Bing API Key 未配置');
-    }
-
-    const response = await axios.get('https://api.bing.microsoft.com/v7.0/news/search', {
-      params: {
-        q: query,
-        count: limit,
-        mkt: 'en-US',
-        category: 'Business',
-        sortBy: 'Date'
-      },
-      headers: {
-        'Ocp-Apim-Subscription-Key': this.bingApiKey
-      },
-      timeout: 10000
-    });
-
-    if (response.data.value) {
-      return response.data.value.map(article => ({
-        title: article.name,
-        description: article.description,
-        url: article.url,
-        publishedAt: new Date(article.datePublished).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
-        source: article.provider?.[0]?.name || 'Bing News'
-      }));
-    }
-
-    throw new Error('Bing News 無有效新聞');
-  }
 
   /**
    * 搜尋關鍵字新聞
