@@ -56,7 +56,7 @@ class NewsService {
       title: article.title,
       description: article.description,
       url: article.url,
-      publishedAt: new Date(article.publishedAt).toLocaleString('zh-TW'),
+      publishedAt: new Date(article.publishedAt).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
       source: article.source.name
     }));
   }

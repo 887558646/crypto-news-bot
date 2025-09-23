@@ -3,7 +3,6 @@ const line = require('@line/bot-sdk');
 const config = require('../config');
 const newsService = require('../services/newsService');
 const priceService = require('../services/priceService');
-const chartService = require('../services/chartService');
 
 const router = express.Router();
 
@@ -79,11 +78,9 @@ async function handleEvent(event) {
   const userId = event.source.userId;
   const messageText = event.message.text.toLowerCase().trim();
 
-  try {
-    // 處理不同類型的訊息
-    if (messageText.startsWith('/chart ')) {
-      return await handleChartCommand(event, messageText);
-    } else if (messageText.startsWith('/subscribe ')) {
+       try {
+         // 處理不同類型的訊息
+         if (messageText.startsWith('/subscribe ')) {
       return await handleSubscribeCommand(event, messageText, userId);
     } else if (messageText === '/unsubscribe') {
       return await handleUnsubscribeCommand(event, userId);
@@ -105,36 +102,6 @@ async function handleEvent(event) {
   }
 }
 
-/**
- * 處理圖表指令
- * @param {Object} event - LINE 事件
- * @param {string} messageText - 訊息文字
- */
-async function handleChartCommand(event, messageText) {
-  const coin = messageText.replace('/chart ', '').trim();
-  
-  if (!isValidCoinSymbol(coin)) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${Object.keys(config.supportedCoins).join(', ')}`
-    });
-  }
-
-  try {
-    const chartUrl = await chartService.generatePriceChart(coin, 7);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'image',
-      originalContentUrl: chartUrl,
-      previewImageUrl: chartUrl
-    });
-  } catch (error) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `無法生成 ${coin.toUpperCase()} 的價格圖表，請稍後再試。`
-    });
-  }
-}
 
 /**
  * 處理訂閱指令
@@ -188,24 +155,21 @@ async function handleUnsubscribeCommand(event, userId) {
  * @param {Object} event - LINE 事件
  */
 async function handleHelpCommand(event) {
-  const helpText = `🤖 Crypto News Bot 使用說明
+     const helpText = `🤖 Crypto News Bot 使用說明
 
-📊 查詢價格：
-直接輸入幣種代號 (btc, eth, sol, bnb, sui)
+     📊 查詢價格：
+     直接輸入幣種代號 (btc, eth, sol, bnb, sui)
 
-📈 查看圖表：
-/chart [幣種] - 查看過去 7 天價格走勢
+     📰 訂閱功能：
+     /subscribe [幣種] - 訂閱特定幣種新聞
+     /unsubscribe - 取消訂閱
 
-📰 訂閱功能：
-/subscribe [幣種] - 訂閱特定幣種新聞
-/unsubscribe - 取消訂閱
+     ℹ️ 其他指令：
+     /help - 顯示此說明
+     /status - 查看訂閱狀態
 
-ℹ️ 其他指令：
-/help - 顯示此說明
-/status - 查看訂閱狀態
-
-支援的加密貨幣：
-${config.supportedCoins.map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
+     支援的加密貨幣：
+     ${config.supportedCoins.map(coin => `• ${coin.toUpperCase()}`).join('\n')}`;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',

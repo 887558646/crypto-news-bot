@@ -5,7 +5,6 @@ const webhookRouter = require('./routes/webhook');
 const scheduler = require('./utils/scheduler');
 const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
-const chartService = require('./services/chartService');
 const { userSubscriptions, broadcastDailyNews } = require('./routes/webhook'); // 引入 userSubscriptions 和 broadcastDailyNews
 
 const app = express();

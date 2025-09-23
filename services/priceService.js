@@ -98,7 +98,7 @@ class PriceService {
       change24h: data.usd_24h_change,
       volume24h: data.usd_24h_vol,
       marketCap: data.usd_market_cap,
-      lastUpdated: new Date().toLocaleString('zh-TW')
+      lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
     };
   }
 
@@ -144,7 +144,7 @@ class PriceService {
       change24h: price.change,
       volume24h: 0,
       marketCap: 0,
-      lastUpdated: new Date().toLocaleString('zh-TW'),
+      lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' }),
       isFallback: true
     };
   }
