@@ -38,6 +38,9 @@ class NewsService {
           from: fromDate, // 只獲取最近24小時的新聞
           pageSize: limit,
           apiKey: this.apiKey
+        },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
       });
 
@@ -117,6 +120,9 @@ class NewsService {
           apiKey: this.apiKey,
           pageSize: count,
         },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇文章`);
@@ -162,6 +168,9 @@ class NewsService {
           apiKey: this.apiKey,
           pageSize: count,
         },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇熱門新聞`);
@@ -205,6 +214,9 @@ class NewsService {
           apiKey: this.apiKey,
           pageSize: count,
         },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       });
 
       console.log(`📰 找到 ${response.data.articles?.length || 0} 篇相關新聞`);
