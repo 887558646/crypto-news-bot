@@ -113,6 +113,6 @@ app.listen(PORT, () => {
   console.log(`📊 狀態檢查: http://localhost:${PORT}/status`);
   console.log(`🧪 測試端點: http://localhost:${PORT}/test`);
   console.log('⏰ 排程器將在啟動後開始運行');
-  scheduler.startScheduler();
+  scheduler.init(webhookRouter);
   console.log('✅ 所有服務已就緒！');
 });

@@ -143,7 +143,7 @@ class PriceService {
     const changeEmoji = change24h >= 0 ? '📈' : '📉';
     const changeText = change24h >= 0 ? `+${change24h.toFixed(2)}%` : `${change24h.toFixed(2)}%`;
 
-    return `${symbol} 即時價格\n\n💵 USD: $${price.usd.toLocaleString()}\n💱 TWD: NT$${price.twd.toLocaleString()}\n\n${changeEmoji} 24h 變化: ${changeText}`;
+    return `${symbol} 即時價格\n\n💵 USD: $${price.usd.toString()}\n💱 TWD: NT$${price.twd.toString()}\n\n${changeEmoji} 24h 變化: ${changeText}`;
   }
 
   /**

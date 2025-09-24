@@ -155,13 +155,8 @@ class InfoService {
   formatPrice(price) {
     if (!price || price === 0) return 'N/A';
     
-    // 如果價格小於1，顯示到小數點後8位
-    if (price < 1) {
-      return price.toFixed(8);
-    }
-    
-    // 如果價格大於等於1，使用原本的格式
-    return price.toLocaleString();
+    // 直接使用 API 回傳的原始值，不進行格式限制
+    return price.toString();
   }
 
   /**

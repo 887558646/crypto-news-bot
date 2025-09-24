@@ -331,7 +331,7 @@ class PredictionService {
     predictions.forEach(pred => {
       const changeEmoji = pred.change >= 0 ? '📈' : '📉';
       const changeColor = pred.change >= 0 ? '🟢' : '🔴';
-      message += `   第${pred.day}天: $${pred.price.toFixed(2)} ${changeEmoji} ${changeColor}${pred.change >= 0 ? '+' : ''}${pred.change.toFixed(2)}% (信心度: ${pred.confidence}%)\n`;
+      message += `   第${pred.day}天: $${pred.price.toString()} ${changeEmoji} ${changeColor}${pred.change >= 0 ? '+' : ''}${pred.change.toFixed(2)}% (信心度: ${pred.confidence}%)\n`;
     });
 
     message += `\n🎯 預測信心度: ${confidence}%\n\n`;
