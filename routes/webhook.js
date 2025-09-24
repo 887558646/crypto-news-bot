@@ -20,6 +20,10 @@ const client = new line.Client(lineConfig);
 // 簡單的用戶列表管理（用於新聞推播）
 const activeUsers = new Set();
 
+// 防重複推播機制
+let lastBroadcastTime = 0;
+const BROADCAST_COOLDOWN = 30 * 60 * 1000; // 30分鐘冷卻時間
+
 
 /**
  * 處理 LINE Webhook
@@ -302,13 +306,13 @@ function formatNewsMessage(news) {
     return '📰 暫無最新新聞';
   }
   
-  let newsText = '📰 最新新聞：\n\n';
+  let newsText = '';
   
   news.forEach((article, index) => {
+    // 只顯示標題、時間和連結，不顯示描述
     newsText += `${index + 1}. ${article.title}\n`;
-    newsText += `   ${article.description}\n`;
-    newsText += `   📅 ${article.publishedAt}\n`;
-    newsText += `   🔗 ${article.url}\n\n`;
+    newsText += `📅 ${article.publishedAt}\n`;
+    newsText += `🔗 ${article.url}\n\n`;
   });
   
   return newsText.trim();
@@ -444,9 +448,19 @@ async function broadcastDailyNews(news) {
       return;
     }
 
+    // 檢查是否在冷卻時間內
+    const now = Date.now();
+    const timeSinceLastBroadcast = now - lastBroadcastTime;
+    console.log(`上次推播時間: ${new Date(lastBroadcastTime).toLocaleString()}, 距離現在: ${Math.round(timeSinceLastBroadcast / 1000)}秒`);
+    
+    if (timeSinceLastBroadcast < BROADCAST_COOLDOWN) {
+      console.log(`推播冷卻時間內，跳過重複推播 (還需等待 ${Math.round((BROADCAST_COOLDOWN - timeSinceLastBroadcast) / 1000)}秒)`);
+      return;
+    }
+
     // 格式化新聞訊息
     const newsText = formatNewsMessage(news);
-    const message = `🌅 早安！今日加密貨幣新聞摘要\n\n${newsText}\n\n💡 使用 /news 可隨時查看最新新聞`;
+    const message = `📰 今日最新加密貨幣新聞\n\n${newsText}\n\n💡 /news 可隨時查看最新新聞`;
 
     console.log('開始推播新聞給所有用戶...');
 
@@ -456,6 +470,7 @@ async function broadcastDailyNews(news) {
         type: 'text',
         text: message
       });
+      lastBroadcastTime = now;
       console.log('✅ 新聞推播完成');
     } catch (error) {
       console.error('❌ 新聞推播失敗:', error.message);
