@@ -10,7 +10,7 @@
 - **備用新聞源**：整合 NewsData.io 作為備用新聞源，確保服務穩定
 
 ### 💰 價格查詢與資訊卡
-- **即時價格**：支援市值前50大加密貨幣
+- **即時價格**：支援所有 CoinGecko 上的加密貨幣
 - **多幣種支援**：同時顯示 USD 和 TWD 價格
 - **24小時變化**：顯示價格變化和漲跌幅
 - **完整資訊卡**：直接輸入幣種代號即可獲取完整資訊
@@ -114,32 +114,31 @@ https://your-domain.com/webhook
 | `/news` | 獲取今日熱門新聞 | `/news` |
 | `/market` | 查看全球市場總覽 | `/market` |
 | `/trending` | 查看趨勢幣種 | `/trending` |
-| `/top50` | 查看市值前50大排名 | `/top50` |
 | `/feargreed` | 查看恐懼貪婪指數 | `/feargreed` |
 | `/signal btc` | 獲取 BTC 技術分析 | `/signal btc` |
 | `/help` | 顯示幫助資訊 | `/help` |
 
-### 支援的加密貨幣 (市值前50大)
+### 支援的加密貨幣
 
 | 代號 | 全名 | 代號 | 全名 | 代號 | 全名 |
 |------|------|------|------|------|------|
-| **BTC** | Bitcoin | **ETH** | Ethereum | **BNB** | Binance Coin |
-| **XRP** | Ripple | **ADA** | Cardano | **DOGE** | Dogecoin |
-| **DOT** | Polkadot | **LTC** | Litecoin | **BCH** | Bitcoin Cash |
-| **LINK** | Chainlink | **XLM** | Stellar | **ETC** | Ethereum Classic |
-| **TRX** | TRON | **DASH** | Dash | **XMR** | Monero |
-| **USDT** | Tether | **EOS** | EOS | **NEO** | NEO |
-| **IOTA** | IOTA | **ZEC** | Zcash | **BSV** | Bitcoin SV |
-| **USDC** | USD Coin | **SOL** | Solana | **AVAX** | Avalanche |
-| **MATIC** | Polygon | **SHIB** | Shiba Inu | **UNI** | Uniswap |
-| **ATOM** | Cosmos | **NEAR** | NEAR Protocol | **LEO** | UNUS SED LEO |
+| **BTC** | Bitcoin | **ETH** | Ethereum | **USDT** | Tether |
+| **XRP** | Ripple | **BNB** | Binance Coin | **SOL** | Solana |
+| **USDC** | USD Coin | **ADA** | Cardano | **DOGE** | Dogecoin |
+| **DOT** | Polkadot | **TRX** | TRON | **MATIC** | Polygon |
+| **LINK** | Chainlink | **SHIB** | Shiba Inu | **LTC** | Litecoin |
+| **BCH** | Bitcoin Cash | **UNI** | Uniswap | **ATOM** | Cosmos |
+| **NEAR** | NEAR Protocol | **XLM** | Stellar | **LEO** | UNUS SED LEO |
 | **FIL** | Filecoin | **OP** | Optimism | **OKB** | OKB |
 | **HBAR** | Hedera | **APT** | Aptos | **IMX** | Immutable |
 | **INJ** | Injective | **CRO** | Cronos | **KAS** | Kaspa |
 | **LDO** | Lido DAO | **VET** | VeChain | **ARB** | Arbitrum |
 | **TUSD** | TrueUSD | **STX** | Stacks | **MNT** | Mantle |
 | **TIA** | Celestia | **GRT** | The Graph | **RUNE** | THORChain |
-| **EGLD** | MultiversX | **ALGO** | Algorand | | |
+| **EGLD** | MultiversX | **ALGO** | Algorand | **SUI** | Sui |
+| **PEPE** | Pepe | **TON** | Toncoin | **WIF** | dogwifhat |
+| **FLOKI** | Floki | **BONK** | Bonk | **WLD** | Worldcoin |
+| **...** | 更多幣種 | **...** | 持續增加 | **...** | 無限制 |
 
 ## 📊 功能狀態
 

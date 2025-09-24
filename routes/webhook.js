@@ -95,8 +95,6 @@ async function handleEvent(event) {
            return await handleMarketCommand(event);
          } else if (messageText === '/trending') {
            return await handleTrendingCommand(event);
-         } else if (messageText === '/top50') {
-           return await handleTop50Command(event);
          } else if (messageText === '/news') {
            return await handleNewsCommand(event);
          } else if (messageText.startsWith('/signal ')) {
@@ -131,20 +129,18 @@ async function handleHelpCommand(event) {
      const helpText = `🤖 Crypto News Bot 使用說明
 
      📊 查詢價格：
-     直接輸入幣種代號 (${config.supportedCoins.slice(0, 5).join(', ')}...)
+     直接輸入幣種代號 (如: btc, eth, doge, shib...)
 
      📈 市場功能：
      /market - 全球市場總覽 (包含恐懼貪婪指數)
      /trending - 趨勢幣種
-     /top50 - 市值前50大排名
      /news - 今日熱門新聞
      /signal [幣種] - 技術分析信號
 
      ℹ️ 其他指令：
      /help - 顯示此說明
 
-     支援的加密貨幣 (市值前50大)：
-     ${config.supportedCoins.join(', ')}`;
+     💡 支援所有 CoinGecko 上的加密貨幣！`;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
@@ -249,7 +245,7 @@ sol - 查詢 SOL 完整資訊卡
 async function handleDefaultMessage(event) {
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: `歡迎使用 Crypto News Bot！🤖\n\n請輸入幣種代號查詢價格，或輸入 /help 查看完整指令說明。\n\n支援的幣種：${config.supportedCoins.join(', ')}`
+    text: `歡迎使用 Crypto News Bot！🤖\n\n請輸入幣種代號查詢價格，或輸入 /help 查看完整指令說明。\n\n💡 支援所有 CoinGecko 上的加密貨幣！`
   });
 }
 
@@ -259,7 +255,10 @@ async function handleDefaultMessage(event) {
  * @returns {boolean} 是否有效
  */
 function isValidCoinSymbol(coin) {
-  return config.supportedCoins.includes(coin.toLowerCase());
+  // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
+  // 只檢查基本格式（字母數字組合，長度合理）
+  const coinRegex = /^[a-zA-Z0-9]{1,20}$/;
+  return coinRegex.test(coin);
 }
 
 /**
@@ -350,26 +349,6 @@ async function handleMarketCommand(event) {
   }
 }
 
-/**
- * 處理市值前50大指令
- * @param {Object} event - LINE 事件
- */
-async function handleTop50Command(event) {
-  try {
-    const top50Coins = await marketService.getTop50ByMarketCap();
-    const top50Text = marketService.formatTop50ByMarketCap(top50Coins);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: top50Text
-    });
-  } catch (error) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '無法獲取市值排名數據，請稍後再試。'
-    });
-  }
-}
 
 /**
  * 處理趨勢幣種指令
