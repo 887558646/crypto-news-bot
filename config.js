@@ -31,8 +31,15 @@ module.exports = {
     marketSummaryTime: '0 18 * * *', // 每天 18:00
   },
   supportedCoins: [
-    'btc', 'eth', 'usdt', 'bnb', 'sol', 'xrp', 'usdc', 'steth', 'ada', 'avax',
-    'trx', 'wbtc', 'link', 'dot', 'matic', 'dai', 'shib', 'ltc', 'bch', 'uni',
-    'atom', 'etc', 'xlm', 'near', 'algo', 'vet', 'fil', 'icp', 'hbar', 'apt'
+    // 前10大 (根據 CoinMarketCap 最新排名)
+    'btc', 'eth', 'bnb', 'xrp', 'ada', 'doge', 'dot', 'ltc', 'bch', 'link',
+    // 11-20大
+    'xlm', 'etc', 'trx', 'dash', 'xmr', 'usdt', 'eos', 'neo', 'iota', 'zec',
+    // 21-30大
+    'bsv', 'usdc', 'sol', 'avax', 'matic', 'shib', 'uni', 'atom', 'near', 'leo',
+    // 31-40大
+    'fil', 'op', 'okb', 'hbar', 'apt', 'imx', 'inj', 'cro', 'kas', 'ldo',
+    // 41-50大
+    'vet', 'arb', 'tusd', 'stx', 'mnt', 'tia', 'grt', 'rune', 'egld', 'algo'
   ],
 };

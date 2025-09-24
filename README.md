@@ -10,7 +10,7 @@
 - **備用新聞源**：整合 NewsData.io 作為備用新聞源，確保服務穩定
 
 ### 💰 價格查詢與資訊卡
-- **即時價格**：支援市值前30大加密貨幣
+- **即時價格**：支援市值前50大加密貨幣
 - **多幣種支援**：同時顯示 USD 和 TWD 價格
 - **24小時變化**：顯示價格變化和漲跌幅
 - **完整資訊卡**：直接輸入幣種代號即可獲取完整資訊
@@ -118,20 +118,27 @@ https://your-domain.com/webhook
 | `/signal btc` | 獲取 BTC 技術分析 | `/signal btc` |
 | `/help` | 顯示幫助資訊 | `/help` |
 
-### 支援的加密貨幣 (市值前30大)
+### 支援的加密貨幣 (市值前50大)
 
 | 代號 | 全名 | 代號 | 全名 | 代號 | 全名 |
 |------|------|------|------|------|------|
-| **BTC** | Bitcoin | **USDT** | Tether | **XRP** | Ripple |
-| **ETH** | Ethereum | **USDC** | USD Coin | **STETH** | Staked Ether |
-| **BNB** | Binance Coin | **ADA** | Cardano | **AVAX** | Avalanche |
-| **SOL** | Solana | **TRX** | TRON | **WBTC** | Wrapped Bitcoin |
-| **LINK** | Chainlink | **DOT** | Polkadot | **MATIC** | Polygon |
-| **DAI** | Dai | **SHIB** | Shiba Inu | **LTC** | Litecoin |
-| **BCH** | Bitcoin Cash | **UNI** | Uniswap | **ATOM** | Cosmos |
-| **ETC** | Ethereum Classic | **XLM** | Stellar | **NEAR** | NEAR Protocol |
-| **ALGO** | Algorand | **VET** | VeChain | **FIL** | Filecoin |
-| **ICP** | Internet Computer | **HBAR** | Hedera | **APT** | Aptos |
+| **BTC** | Bitcoin | **ETH** | Ethereum | **BNB** | Binance Coin |
+| **XRP** | Ripple | **ADA** | Cardano | **DOGE** | Dogecoin |
+| **DOT** | Polkadot | **LTC** | Litecoin | **BCH** | Bitcoin Cash |
+| **LINK** | Chainlink | **XLM** | Stellar | **ETC** | Ethereum Classic |
+| **TRX** | TRON | **DASH** | Dash | **XMR** | Monero |
+| **USDT** | Tether | **EOS** | EOS | **NEO** | NEO |
+| **IOTA** | IOTA | **ZEC** | Zcash | **BSV** | Bitcoin SV |
+| **USDC** | USD Coin | **SOL** | Solana | **AVAX** | Avalanche |
+| **MATIC** | Polygon | **SHIB** | Shiba Inu | **UNI** | Uniswap |
+| **ATOM** | Cosmos | **NEAR** | NEAR Protocol | **LEO** | UNUS SED LEO |
+| **FIL** | Filecoin | **OP** | Optimism | **OKB** | OKB |
+| **HBAR** | Hedera | **APT** | Aptos | **IMX** | Immutable |
+| **INJ** | Injective | **CRO** | Cronos | **KAS** | Kaspa |
+| **LDO** | Lido DAO | **VET** | VeChain | **ARB** | Arbitrum |
+| **TUSD** | TrueUSD | **STX** | Stacks | **MNT** | Mantle |
+| **TIA** | Celestia | **GRT** | The Graph | **RUNE** | THORChain |
+| **EGLD** | MultiversX | **ALGO** | Algorand | | |
 
 ## 📊 功能狀態
 
@@ -215,7 +222,7 @@ POST /webhook
 ### CoinGecko API
 - 免費使用，無需申請 API Key
 - 有速率限制，建議適度使用
-- 提供市值前30大加密貨幣數據
+- 提供市值前50大加密貨幣數據
 
 ## 🐛 故障排除
 
@@ -300,7 +307,7 @@ npm run dev
 - 📊 **功能狀態**:
   - 核心功能: 7/7 正常 (100%)
   - 進階功能: 3/3 受 CoinGecko 速率限制影響
-  - 支援幣種: 市值前30大加密貨幣
+  - 支援幣種: 市值前50大加密貨幣
 
 ### v1.0.0 (初始版本)
 - 基礎價格查詢功能
