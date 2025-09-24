@@ -260,6 +260,23 @@ function isValidCoinSymbol(coin) {
 }
 
 /**
+ * 格式化價格顯示
+ * @param {number} price - 價格
+ * @returns {string} 格式化後的價格字串
+ */
+function formatPrice(price) {
+  if (!price || price === 0) return 'N/A';
+  
+  // 如果價格小於1，顯示到小數點後8位
+  if (price < 1) {
+    return price.toFixed(8);
+  }
+  
+  // 如果價格大於等於1，使用原本的格式
+  return price.toLocaleString();
+}
+
+/**
  * 格式化價格訊息
  * @param {Object} priceData - 價格資料
  * @returns {string} 格式化後的價格訊息
@@ -269,8 +286,8 @@ function formatPriceMessage(priceData) {
   const changeColor = priceData.change24h >= 0 ? '🟢' : '🔴';
   
   return `💰 ${priceData.symbol} 即時價格
-${changeEmoji} $${priceData.price.usd.toFixed(2)} USD
-💱 NT$${priceData.price.twd.toFixed(0)} TWD
+${changeEmoji} $${formatPrice(priceData.price.usd)} USD
+💱 NT$${formatPrice(priceData.price.twd)} TWD
 ${changeColor} 24h 變化: ${priceData.change24h >= 0 ? '+' : ''}${priceData.change24h.toFixed(2)}%
 📊 24h 交易量: $${(priceData.volume24h / 1000000).toFixed(1)}M
 💎 市值: $${(priceData.marketCap / 1000000000).toFixed(1)}B

@@ -149,6 +149,23 @@ class InfoService {
   }
 
   /**
+   * 格式化價格顯示
+   * @param {number} price - 價格
+   * @returns {string} 格式化後的價格字串
+   */
+  formatPrice(price) {
+    if (!price || price === 0) return 'N/A';
+    
+    // 如果價格小於1，顯示到小數點後8位
+    if (price < 1) {
+      return price.toFixed(8);
+    }
+    
+    // 如果價格大於等於1，使用原本的格式
+    return price.toLocaleString();
+  }
+
+  /**
    * 格式化完整幣種資訊卡 (包含價格和詳細資訊)
    * @param {Object} priceData - 價格資料
    * @param {Object} coinInfo - 幣種資訊
@@ -164,8 +181,8 @@ class InfoService {
     
     // 價格資訊
     message += `💰 價格資訊\n`;
-    message += `USD: $${priceUSD ? priceUSD.toLocaleString() : 'N/A'}\n`;
-    message += `TWD: NT$${priceTWD ? priceTWD.toLocaleString() : 'N/A'}\n`;
+    message += `USD: $${this.formatPrice(priceUSD)}\n`;
+    message += `TWD: NT$${this.formatPrice(priceTWD)}\n`;
     
     // 漲跌幅
     const changeEmoji = change24h >= 0 ? '📈' : '📉';
