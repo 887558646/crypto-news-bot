@@ -66,9 +66,11 @@ class NewsService {
       }
     } catch (error) {
       console.error('獲取新聞失敗:', error.message);
-      // 如果是 403 或 426 錯誤，嘗試使用備用新聞源
-      if (error.message.includes('403') || error.message.includes('426')) {
-        console.log('🔄 嘗試使用備用新聞源...');
+      // 如果是 403、426 或額度用完錯誤，嘗試使用備用新聞源
+      if (error.message.includes('403') || error.message.includes('426') || 
+          error.message.includes('429') || error.message.includes('quota') ||
+          error.message.includes('limit') || error.message.includes('exceeded')) {
+        console.log('🔄 NewsAPI 額度用完，嘗試使用備用新聞源...');
         return backupNewsService.getCryptoNews(coin, limit);
       }
       throw new Error(`獲取 ${coin ? coin.toUpperCase() : '加密貨幣'} 新聞失敗: ${error.message}`);
