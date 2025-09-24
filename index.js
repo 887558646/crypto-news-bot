@@ -6,6 +6,7 @@ const scheduler = require('./utils/scheduler');
 const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
 const { getActiveUsersStats } = require('./routes/webhook');
+const mappingService = require('./services/mappingService');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.get('/status', (req, res) => {
     },
     scheduler: schedulerStatus,
     activeUsers: getActiveUsersStats(),
+    mappingCache: mappingService.getCacheStats(),
     apiKeys: {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',
@@ -52,6 +54,15 @@ app.post('/test', async (req, res) => {
         console.log('手動觸發每日新聞推播...');
         await scheduler.triggerDailyNews();
         message = '每日新聞推播已觸發';
+        break;
+      case 'test-mapping':
+        if (coin) {
+          console.log(`測試動態映射: ${coin}`);
+          const coinId = await mappingService.findCoinId(coin);
+          message = coinId ? `映射成功: ${coin} -> ${coinId}` : `映射失敗: ${coin}`;
+        } else {
+          message = '請提供 coin 參數';
+        }
         break;
       case 'specific-news':
         if (!userId || !coin) {

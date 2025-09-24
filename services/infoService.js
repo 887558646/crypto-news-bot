@@ -1,5 +1,6 @@
 const axios = require('axios');
 const config = require('../config');
+const mappingService = require('./mappingService');
 
 class InfoService {
   constructor() {
@@ -22,15 +23,24 @@ class InfoService {
         'btc': 'bitcoin', 'eth': 'ethereum', 'usdt': 'tether', 'bnb': 'binancecoin', 'sol': 'solana',
         'xrp': 'ripple', 'usdc': 'usd-coin', 'steth': 'staked-ether', 'ada': 'cardano', 'avax': 'avalanche-2',
         'trx': 'tron', 'wbtc': 'wrapped-bitcoin', 'link': 'chainlink', 'dot': 'polkadot', 'matic': 'matic-network',
-        'dai': 'dai', 'shib': 'shiba-inu', 'ltc': 'litecoin', 'bch': 'bitcoin-cash', 'uni': 'uniswap',
+        'dai': 'dai', 'shib': 'shiba-inu', 'doge': 'dogecoin', 'op': 'optimism', 'arb': 'arbitrum', 'inj': 'injective-protocol', 'sei': 'sei-network', 'sui': 'sui', 'rndr': 'render-token', 'imx': 'immutable-x', 'ftm': 'fantom', 'one': 'harmony', 'celo': 'celo', 'klay': 'klay-token', 'iotx': 'iotex', 'rune': 'thorchain', 'kava': 'kava', 'scrt': 'secret', 'mina': 'mina-protocol', 'rose': 'oasis-network', 'grt': 'the-graph', 'luna': 'terra-luna-2', 'lunc': 'terra-luna', 'ustc': 'terrausd-classic', 'ust': 'terrausd', 'osmo': 'osmosis', 'juno': 'juno-network', 'evmos': 'evmos', 'strd': 'stride', 'tia': 'celestia', 'saga': 'saga', 'w': 'wormhole', 'pyth': 'pyth-network', 'jup': 'jupiter-exchange-solana', 'ray': 'raydium', 'orca': 'orca', 'srm': 'serum', 'step': 'step-finance', 'mango': 'mango-markets', 'port': 'port-finance', 'slnd': 'solend', 'mnde': 'marinade', 'pepe': 'pepe', 'floki': 'floki', 'bonk': 'bonk', 'wif': 'dogwifcoin', 'bome': 'book-of-meme', 'meme': 'memecoin', 'akita': 'akita-inu', 'kishu': 'kishu-inu', 'elon': 'dogelon-mars', 'baby': 'baby-doge-coin', 'safemoon': 'safemoon', 'crv': 'curve-dao-token', 'comp': 'compound-governance-token', 'mkr': 'maker', 'snx': 'havven', 'yfi': 'yearn-finance', '1inch': '1inch', 'bat': 'basic-attention-token', 'zec': 'zcash', 'dash': 'dash', 'xmr': 'monero', 'eos': 'eos', 'xtz': 'tezos', 'qtum': 'qtum', 'neo': 'neo', 'ont': 'ontology', 'zil': 'zilliqa', 'waves': 'waves', 'omg': 'omg', 'knc': 'kyber-network-crystal', 'ren': 'republic-protocol', 'lrc': 'loopring', 'zrx': '0x', 'rep': 'augur', 'gnt': 'golem', 'sushi': 'sushi', 'cake': 'pancakeswap-token', 'bake': 'bakerytoken', 'alpaca': 'alpaca-finance', 'auto': 'auto', 'bunny': 'pancakebunny', 'ven': 'vechain', 'hot': 'holo', 'dent': 'dent', 'win': 'wink', 'btt': 'bittorrent', 'usdd': 'usdd', 'tusd': 'true-usd', 'busd': 'binance-usd', 'frax': 'frax', 'lusd': 'liquity-usd', 'gusd': 'gemini-dollar', 'paxg': 'pax-gold', 'tgold': 'tether-gold', 'reth': 'rocket-pool-eth', 'cbeth': 'coinbase-wrapped-staked-eth', 'wsteth': 'wrapped-steth', 'rpl': 'rocket-pool', 'frxeth': 'frax-ether', 'sfrxeth': 'staked-frax-ether', 'ankr': 'ankr', 'cvx': 'convex-finance', 'bal': 'balancer', 'dydx': 'dydx', 'gmx': 'gmx', 'gains': 'gains-network', 'perp': 'perpetual-protocol', 'mux': 'mux-protocol', 'cap': 'cap', 'lev': 'leverfi', 'lyra': 'lyra-finance', 'kwenta': 'kwenta', 'cream': 'cream-2', 'venus': 'venus', 'pancake': 'pancakeswap-token', 'bakery': 'bakerytoken', 'compound': 'compound-governance-token', 'yearn': 'yearn-finance', 'maker': 'maker', 'synthetix': 'havven', 'balancer': 'balancer', 'curve': 'curve-dao-token', 'convex': 'convex-finance', 'lido': 'lido-dao', 'rocket': 'rocket-pool', 'ltc': 'litecoin', 'bch': 'bitcoin-cash', 'uni': 'uniswap',
         'atom': 'cosmos', 'etc': 'ethereum-classic', 'xlm': 'stellar', 'near': 'near', 'algo': 'algorand',
         'vet': 'vechain', 'fil': 'filecoin', 'icp': 'internet-computer', 'hbar': 'hedera-hashgraph', 'apt': 'aptos'
       };
 
-      // 先嘗試使用硬編碼映射，如果沒有就使用幣種代號
+      // 先嘗試使用硬編碼映射
       let coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      
       if (!coinGeckoId) {
-        coinGeckoId = coin.toLowerCase();
+        // 如果沒有硬編碼映射，嘗試動態映射
+        console.log(`🔍 幣種 ${coin} 未在映射表中，嘗試動態映射...`);
+        coinGeckoId = await mappingService.findCoinId(coin);
+        
+        if (!coinGeckoId) {
+          // 如果動態映射也失敗，使用幣種代號作為最後嘗試
+          coinGeckoId = coin.toLowerCase();
+          console.log(`⚠️ 動態映射失敗，使用原始代號: ${coinGeckoId}`);
+        }
       }
 
       // 調用 CoinGecko API 獲取詳細資訊
