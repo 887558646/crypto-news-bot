@@ -5,7 +5,7 @@ const webhookRouter = require('./routes/webhook');
 const scheduler = require('./utils/scheduler');
 const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
-const { broadcastDailyNews, getActiveUsersStats } = require('./routes/webhook'); // 引入 broadcastDailyNews
+const { getActiveUsersStats } = require('./routes/webhook');
 
 const app = express();
 
@@ -50,7 +50,7 @@ app.post('/test', async (req, res) => {
     switch (type) {
       case 'daily-news':
         console.log('手動觸發每日新聞推播...');
-        await broadcastDailyNews();
+        await scheduler.triggerDailyNews();
         message = '每日新聞推播已觸發';
         break;
       case 'specific-news':
