@@ -14,9 +14,7 @@ class PredictionService {
    */
   async generatePricePrediction(coin, days = 7) {
     try {
-      if (!config.supportedCoins.includes(coin.toLowerCase())) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
-      }
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
 
       // 獲取歷史數據
       const historicalData = await this.getHistoricalData(coin, 30);

@@ -13,9 +13,7 @@ class InfoService {
    */
   async getCoinInfo(coin) {
     try {
-      if (!config.supportedCoins.includes(coin.toLowerCase())) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
-      }
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
 
       console.log(`🔍 開始獲取 ${coin.toUpperCase()} 詳細資訊...`);
 

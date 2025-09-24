@@ -17,7 +17,8 @@ class PortfolioService {
    * @returns {boolean} 是否添加成功
    */
   addPortfolioItem(userId, coin, amount, buyPrice) {
-    if (!config.supportedCoins.includes(coin.toLowerCase())) {
+    // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
+    if (false) {
       return false;
     }
 

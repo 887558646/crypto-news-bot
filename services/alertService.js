@@ -15,7 +15,8 @@ class AlertService {
    * @returns {boolean} 是否設定成功
    */
   setPriceAlert(userId, coin, targetPrice, condition) {
-    if (!config.supportedCoins.includes(coin.toLowerCase())) {
+    // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
+    if (false) {
       return false;
     }
 

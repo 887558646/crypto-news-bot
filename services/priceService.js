@@ -15,9 +15,7 @@ class PriceService {
    */
   async getCoinPrice(coin) {
     try {
-      if (!config.supportedCoins.includes(coin.toLowerCase())) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
-      }
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
 
       // 映射到 CoinGecko 的實際 ID (市值前30大)
       const coinGeckoIds = {
@@ -53,9 +51,10 @@ class PriceService {
         'apt': 'aptos'
       };
 
-      const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      // 先嘗試使用硬編碼映射，如果沒有就使用幣種代號
+      let coinGeckoId = coinGeckoIds[coin.toLowerCase()];
       if (!coinGeckoId) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
+        coinGeckoId = coin.toLowerCase();
       }
 
       const response = await axios.get(`${this.baseUrl}${this.priceEndpoint}`, {
@@ -87,7 +86,8 @@ class PriceService {
    */
   async getMultipleCoinPrices(coins) {
     try {
-      const coinIds = coins.filter(coin => config.supportedCoins.includes(coin.toLowerCase())).join(',');
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
+      const coinIds = coins.join(',');
       
       const response = await axios.get(`${this.baseUrl}${this.priceEndpoint}`, {
         params: {
@@ -184,9 +184,7 @@ class PriceService {
    */
   async getPriceHistory(coin, days = 7) {
     try {
-      if (!config.supportedCoins.includes(coin.toLowerCase())) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
-      }
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
 
       const response = await axios.get(`${this.baseUrl}${this.chartEndpoint}/${coin.toLowerCase()}/market_chart`, {
         params: {
@@ -213,9 +211,7 @@ class PriceService {
    */
   async getOHLCVData(coin, days = 30) {
     try {
-      if (!config.supportedCoins.includes(coin.toLowerCase())) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
-      }
+      // 移除支援幣種限制，支援所有 CoinGecko 上的加密貨幣
 
       const coinGeckoIds = {
         'btc': 'bitcoin', 'eth': 'ethereum', 'usdt': 'tether', 'bnb': 'binancecoin', 'sol': 'solana',
@@ -226,9 +222,10 @@ class PriceService {
         'vet': 'vechain', 'fil': 'filecoin', 'icp': 'internet-computer', 'hbar': 'hedera-hashgraph', 'apt': 'aptos'
       };
       
-      const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      // 先嘗試使用硬編碼映射，如果沒有就使用幣種代號
+      let coinGeckoId = coinGeckoIds[coin.toLowerCase()];
       if (!coinGeckoId) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
+        coinGeckoId = coin.toLowerCase();
       }
 
       const response = await axios.get(`${this.baseUrl}${this.chartEndpoint}/${coinGeckoId}/market_chart`, {

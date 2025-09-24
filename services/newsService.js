@@ -22,7 +22,7 @@ class NewsService {
     try {
       let query = 'cryptocurrency OR bitcoin OR ethereum';
       
-      if (coin && config.supportedCoins.includes(coin.toLowerCase())) {
+      if (coin) {
         query = `${coin.toLowerCase()} OR ${coin.toUpperCase()}`;
       }
 
