@@ -39,7 +39,6 @@ app.get('/status', (req, res) => {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',
     },
-    supportedCoins: config.supportedCoins,
   });
 });
 

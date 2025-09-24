@@ -138,6 +138,7 @@ async function handleHelpCommand(event) {
      /signal [幣種] - 技術分析信號
 
      ℹ️ 其他指令：
+     /token - 幣種查詢功能說明
      /help - 顯示此說明
 
      💡 支援所有 CoinGecko 上的加密貨幣！`;
@@ -193,7 +194,7 @@ async function handleSignalHelpCommand(event) {
 /signal eth - 查詢 ETH 技術分析
 /signal sol - 查詢 SOL 技術分析
 
-支援的幣種：${config.supportedCoins.join(', ')}`
+💡 支援所有 CoinGecko 上的加密貨幣！`
   });
 }
 
@@ -213,7 +214,7 @@ btc - 查詢 BTC 完整資訊卡
 eth - 查詢 ETH 完整資訊卡
 sol - 查詢 SOL 完整資訊卡
 
-支援的幣種：${config.supportedCoins.join(', ')}`
+💡 支援所有 CoinGecko 上的加密貨幣！`
   });
 }
 
@@ -234,7 +235,7 @@ btc - 查詢 BTC 完整資訊卡
 eth - 查詢 ETH 完整資訊卡
 sol - 查詢 SOL 完整資訊卡
 
-支援的幣種：${config.supportedCoins.join(', ')}`
+💡 支援所有 CoinGecko 上的加密貨幣！`
   });
 }
 
@@ -366,26 +367,6 @@ async function handleTrendingCommand(event) {
   }
 }
 
-/**
- * 處理恐懼貪婪指數指令
- * @param {Object} event - LINE 事件
- */
-async function handleFearGreedCommand(event) {
-  try {
-    const fearGreedData = await marketService.getFearGreedIndex();
-    const fearGreedText = marketService.formatFearGreedIndex(fearGreedData);
-    
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: fearGreedText
-    });
-  } catch (error) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '無法獲取恐懼貪婪指數，請稍後再試。'
-    });
-  }
-}
 
 /**
  * 處理新聞指令
@@ -429,7 +410,7 @@ async function handleSignalCommand(event, messageText) {
     if (!isValidCoinSymbol(coin)) {
       return client.replyMessage(event.replyToken, {
         type: 'text',
-        text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
+        text: `無法找到加密貨幣: ${coin}\n💡 請確認幣種代號正確，支援所有 CoinGecko 上的加密貨幣`
       });
     }
 

@@ -27,9 +27,10 @@ class InfoService {
         'vet': 'vechain', 'fil': 'filecoin', 'icp': 'internet-computer', 'hbar': 'hedera-hashgraph', 'apt': 'aptos'
       };
 
-      const coinGeckoId = coinGeckoIds[coin.toLowerCase()];
+      // 先嘗試使用硬編碼映射，如果沒有就使用幣種代號
+      let coinGeckoId = coinGeckoIds[coin.toLowerCase()];
       if (!coinGeckoId) {
-        throw new Error(`不支援的加密貨幣: ${coin}`);
+        coinGeckoId = coin.toLowerCase();
       }
 
       // 調用 CoinGecko API 獲取詳細資訊
