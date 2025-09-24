@@ -27,7 +27,7 @@ module.exports = {
     webhookPath: '/webhook',
   },
   schedule: {
-    newsPushTime: '45 12 * * *', // 每天中午 12:45
+    newsPushTime: '40 13 * * *', // 每天下午 13:40
     marketSummaryTime: '0 18 * * *', // 每天 18:00
   },
   supportedCoins: [
