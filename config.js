@@ -27,19 +27,7 @@ module.exports = {
     webhookPath: '/webhook',
   },
   schedule: {
-    newsPushTime: '30 22 * * *', // 每天晚上 22:30
+    newsPushTime: '0 8 * * *', // 每天早上 08:00
     marketSummaryTime: '0 18 * * *', // 每天 18:00
   },
-  supportedCoins: [
-    // 前10大
-    'btc', 'eth', 'usdt', 'xrp', 'bnb', 'sol', 'usdc', 'doge', 'steth', 'trx',
-    // 11-20大
-    'ada', 'wsteth', 'wbeth', 'link', 'usde', 'avax', 'wbtc', 'figr_heloc', 'hype', 'sui',
-    // 21-30大
-    'xlm', 'bch', 'weeth', 'weth', 'hbar', 'leo', 'ltc', 'usds', 'bsc-usd', 'cro',
-    // 31-40大
-    'ton', 'shib', 'cbbtc', 'susde', 'dot', 'wbt', 'mnt', 'wlfi', 'xmr', 'uni',
-    // 41-50大
-    'dai', 'ena', 'aave', 'm', 'pepe', 'usdt0', 'okb', 'ip', 'bgb', 'near'
-  ],
 };

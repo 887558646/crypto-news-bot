@@ -460,7 +460,7 @@ async function broadcastDailyNews(news) {
 
     // 格式化新聞訊息
     const newsText = formatNewsMessage(news);
-    const message = `📰 今日最新加密貨幣新聞\n\n${newsText}\n\n💡 /news 可隨時查看最新新聞`;
+    const message = `🌅 早安！今日最新加密貨幣新聞\n\n${newsText}\n\n💡 /news 可隨時查看最新新聞`;
 
     console.log('開始推播新聞給所有用戶...');
 

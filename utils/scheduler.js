@@ -29,7 +29,7 @@ class Scheduler {
 
     console.log('啟動排程器...');
 
-    // 每天晚上 22:30 推播每日新聞摘要 (UTC+8)
+    // 每天早上 08:00 推播每日新聞摘要 (UTC+8)
     cron.schedule(config.schedule.newsPushTime, async () => {
       console.log('開始執行每日新聞推播...');
       await this.broadcastDailyNews();
@@ -156,7 +156,7 @@ class Scheduler {
           name: '每日新聞推播',
           schedule: config.schedule.newsPushTime,
           timezone: 'Asia/Taipei (UTC+8)',
-          description: '每天晚上 22:30 推播加密貨幣新聞摘要'
+          description: '每天早上 08:00 推播加密貨幣新聞摘要'
         },
         {
           name: '市場總結推播',
