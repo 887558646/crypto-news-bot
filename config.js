@@ -31,15 +31,15 @@ module.exports = {
     marketSummaryTime: '0 18 * * *', // 每天 18:00
   },
   supportedCoins: [
-    // 前10大 (根據 CoinMarketCap 最新排名)
-    'btc', 'eth', 'bnb', 'xrp', 'ada', 'doge', 'dot', 'ltc', 'bch', 'link',
+    // 前10大
+    'btc', 'eth', 'usdt', 'xrp', 'bnb', 'sol', 'usdc', 'doge', 'steth', 'trx',
     // 11-20大
-    'xlm', 'etc', 'trx', 'dash', 'xmr', 'usdt', 'eos', 'neo', 'iota', 'zec',
+    'ada', 'wsteth', 'wbeth', 'link', 'usde', 'avax', 'wbtc', 'figr_heloc', 'hype', 'sui',
     // 21-30大
-    'bsv', 'usdc', 'sol', 'avax', 'matic', 'shib', 'uni', 'atom', 'near', 'leo',
+    'xlm', 'bch', 'weeth', 'weth', 'hbar', 'leo', 'ltc', 'usds', 'bsc-usd', 'cro',
     // 31-40大
-    'fil', 'op', 'okb', 'hbar', 'apt', 'imx', 'inj', 'cro', 'kas', 'ldo',
+    'ton', 'shib', 'cbbtc', 'susde', 'dot', 'wbt', 'mnt', 'wlfi', 'xmr', 'uni',
     // 41-50大
-    'vet', 'arb', 'tusd', 'stx', 'mnt', 'tia', 'grt', 'rune', 'egld', 'algo'
+    'dai', 'ena', 'aave', 'm', 'pepe', 'usdt0', 'okb', 'ip', 'bgb', 'near'
   ],
 };

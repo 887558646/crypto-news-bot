@@ -65,6 +65,45 @@ class MarketService {
   }
 
   /**
+   * 獲取市值前50大的加密貨幣
+   * @returns {Promise<Array>} 市值前50大的幣種列表
+   */
+  async getTop50ByMarketCap() {
+    try {
+      const response = await axios.get(`${this.baseUrl}/coins/markets`, {
+        params: {
+          vs_currency: 'usd',
+          order: 'market_cap_desc',
+          per_page: 50,
+          page: 1,
+          sparkline: false,
+          price_change_percentage: '24h',
+          x_cg_demo_api_key: config.coingecko.apiKey
+        }
+      });
+      
+      if (response.data && Array.isArray(response.data)) {
+        return response.data.map((coin, index) => ({
+          rank: index + 1,
+          id: coin.id,
+          name: coin.name,
+          symbol: coin.symbol,
+          currentPrice: coin.current_price,
+          marketCap: coin.market_cap,
+          marketCapRank: coin.market_cap_rank,
+          totalVolume: coin.total_volume,
+          priceChange24h: coin.price_change_percentage_24h,
+          lastUpdated: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })
+        }));
+      }
+      throw new Error('無法獲取市值排名數據');
+    } catch (error) {
+      console.error('獲取市值前50大失敗:', error.message);
+      throw new Error(`獲取市值前50大失敗: ${error.message}`);
+    }
+  }
+
+  /**
    * 獲取恐懼貪婪指數
    * @returns {Promise<Object>} 恐懼貪婪指數
    */
@@ -132,6 +171,42 @@ class MarketService {
     message += `
 
 ⏰ 更新時間: ${data.lastUpdated}`;
+
+    return message;
+  }
+
+  /**
+   * 格式化市值前50大訊息
+   * @param {Array} coins - 市值前50大的幣種
+   * @returns {string} 格式化訊息
+   */
+  formatTop50ByMarketCap(coins) {
+    if (coins.length === 0) {
+      return '目前無法獲取市值排名數據。';
+    }
+
+    let message = '🏆 市值前50大加密貨幣\n\n';
+    
+    // 顯示前10名
+    coins.slice(0, 10).forEach((coin) => {
+      const changeEmoji = coin.priceChange24h >= 0 ? '📈' : '📉';
+      const changeColor = coin.priceChange24h >= 0 ? '🟢' : '🔴';
+      const price = coin.currentPrice < 1 ? coin.currentPrice.toFixed(8) : coin.currentPrice.toLocaleString();
+      
+      message += `${coin.rank}. ${coin.name} (${coin.symbol.toUpperCase()})\n`;
+      message += `   💰 價格: $${price}\n`;
+      message += `   ${changeEmoji} 24h: ${changeColor}${coin.priceChange24h >= 0 ? '+' : ''}${coin.priceChange24h.toFixed(2)}%\n`;
+      message += `   💎 市值: $${(coin.marketCap / 1e9).toFixed(1)}B\n\n`;
+    });
+
+    message += '📊 完整排名 (11-50名):\n';
+    coins.slice(10, 50).forEach((coin) => {
+      const changeEmoji = coin.priceChange24h >= 0 ? '📈' : '📉';
+      message += `${coin.rank}. ${coin.symbol.toUpperCase()} ${changeEmoji}${coin.priceChange24h >= 0 ? '+' : ''}${coin.priceChange24h.toFixed(1)}%\n`;
+    });
+
+    message += `\n⏰ 更新時間: ${coins[0].lastUpdated}\n`;
+    message += '💡 數據來源：CoinGecko API';
 
     return message;
   }

@@ -114,6 +114,7 @@ https://your-domain.com/webhook
 | `/news` | 獲取今日熱門新聞 | `/news` |
 | `/market` | 查看全球市場總覽 | `/market` |
 | `/trending` | 查看趨勢幣種 | `/trending` |
+| `/top50` | 查看市值前50大排名 | `/top50` |
 | `/feargreed` | 查看恐懼貪婪指數 | `/feargreed` |
 | `/signal btc` | 獲取 BTC 技術分析 | `/signal btc` |
 | `/help` | 顯示幫助資訊 | `/help` |

@@ -95,6 +95,8 @@ async function handleEvent(event) {
            return await handleMarketCommand(event);
          } else if (messageText === '/trending') {
            return await handleTrendingCommand(event);
+         } else if (messageText === '/top50') {
+           return await handleTop50Command(event);
          } else if (messageText === '/news') {
            return await handleNewsCommand(event);
          } else if (messageText.startsWith('/signal ')) {
@@ -134,13 +136,14 @@ async function handleHelpCommand(event) {
      📈 市場功能：
      /market - 全球市場總覽 (包含恐懼貪婪指數)
      /trending - 趨勢幣種
+     /top50 - 市值前50大排名
      /news - 今日熱門新聞
      /signal [幣種] - 技術分析信號
 
      ℹ️ 其他指令：
      /help - 顯示此說明
 
-     支援的加密貨幣 (市值前30大)：
+     支援的加密貨幣 (市值前50大)：
      ${config.supportedCoins.join(', ')}`;
 
   return client.replyMessage(event.replyToken, {
@@ -343,6 +346,27 @@ async function handleMarketCommand(event) {
     return client.replyMessage(event.replyToken, {
       type: 'text',
       text: '無法獲取市場數據，請稍後再試。'
+    });
+  }
+}
+
+/**
+ * 處理市值前50大指令
+ * @param {Object} event - LINE 事件
+ */
+async function handleTop50Command(event) {
+  try {
+    const top50Coins = await marketService.getTop50ByMarketCap();
+    const top50Text = marketService.formatTop50ByMarketCap(top50Coins);
+    
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: top50Text
+    });
+  } catch (error) {
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: '無法獲取市值排名數據，請稍後再試。'
     });
   }
 }
