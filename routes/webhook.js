@@ -6,7 +6,6 @@ const priceService = require('../services/priceService');
 const marketService = require('../services/marketService');
 const signalService = require('../services/signalService');
 const infoService = require('../services/infoService');
-const subscriptionService = require('../services/subscriptionService');
 
 const router = express.Router();
 
@@ -18,7 +17,9 @@ const lineConfig = {
 
 const client = new line.Client(lineConfig);
 
-// 用戶訂閱狀態管理（使用持久化服務）
+// 簡單的用戶列表管理（用於新聞推播）
+const activeUsers = new Set();
+
 
 /**
  * 處理 LINE Webhook
@@ -80,17 +81,16 @@ async function handleEvent(event) {
 
   const userId = event.source.userId;
   const messageText = event.message.text.toLowerCase().trim();
+  
+  // 記錄活躍用戶（用於新聞推播）
+  if (userId) {
+    activeUsers.add(userId);
+  }
 
        try {
          // 處理不同類型的訊息
-         if (messageText.startsWith('/subscribe ')) {
-      return await handleSubscribeCommand(event, messageText, userId);
-    } else if (messageText.startsWith('/unsubscribe')) {
-      return await handleUnsubscribeCommand(event, messageText, userId);
-    } else if (messageText === '/help') {
+         if (messageText === '/help') {
       return await handleHelpCommand(event);
-         } else if (messageText === '/status') {
-           return await handleStatusCommand(event, userId);
          } else if (messageText === '/market') {
            return await handleMarketCommand(event);
          } else if (messageText === '/trending') {
@@ -120,106 +120,6 @@ async function handleEvent(event) {
 }
 
 
-/**
- * 處理訂閱指令
- * @param {Object} event - LINE 事件
- * @param {string} messageText - 訊息文字
- * @param {string} userId - 用戶 ID
- */
-async function handleSubscribeCommand(event, messageText, userId) {
-  const coin = messageText.replace('/subscribe ', '').trim();
-  
-  if (!isValidCoinSymbol(coin)) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
-    });
-  }
-
-  // 使用訂閱服務添加訂閱
-  const success = await subscriptionService.addSubscription(userId, coin.toLowerCase());
-  
-  if (!success) {
-    // 獲取當前訂閱列表
-    const currentSubscriptions = subscriptionService.getSubscriptions(userId);
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `⚠️ 您已經訂閱了 ${coin.toUpperCase()} 新聞推播。\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe ${coin} 可取消特定幣種訂閱。`
-    });
-  }
-
-  // 獲取更新後的訂閱列表
-  const currentSubscriptions = subscriptionService.getSubscriptions(userId);
-  
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: `✅ 已成功訂閱 ${coin.toUpperCase()} 新聞推播！\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n每天早上 9:00 會收到最新消息。\n使用 /unsubscribe ${coin} 可取消特定幣種訂閱。`
-  });
-}
-
-/**
- * 處理取消訂閱指令
- * @param {Object} event - LINE 事件
- * @param {string} userId - 用戶 ID
- */
-async function handleUnsubscribeCommand(event, messageText, userId) {
-  const coin = messageText.replace('/unsubscribe', '').trim();
-  
-  const currentSubscriptions = subscriptionService.getSubscriptions(userId);
-  
-  if (currentSubscriptions.length === 0) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '您目前沒有訂閱任何新聞推播。\n\n使用 /subscribe [幣種] 可訂閱特定幣種的新聞。'
-    });
-  }
-  
-  if (!coin) {
-    // 取消所有訂閱
-    await subscriptionService.removeSubscription(userId);
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `✅ 已取消所有新聞推播訂閱。\n\n使用 /subscribe [幣種] 可重新訂閱。`
-    });
-  }
-  
-  if (!isValidCoinSymbol(coin)) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `不支援的加密貨幣: ${coin}\n支援的幣種: ${config.supportedCoins.join(', ')}`
-    });
-  }
-  
-  if (!currentSubscriptions.includes(coin.toLowerCase())) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `⚠️ 您沒有訂閱 ${coin.toUpperCase()} 新聞推播。\n\n當前訂閱: ${currentSubscriptions.map(c => c.toUpperCase()).join(', ')}`
-    });
-  }
-  
-  // 移除特定幣種訂閱
-  const success = await subscriptionService.removeSubscription(userId, coin.toLowerCase());
-  
-  if (success) {
-    const updatedSubscriptions = subscriptionService.getSubscriptions(userId);
-    if (updatedSubscriptions.length === 0) {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n您目前沒有訂閱任何新聞推播。\n使用 /subscribe [幣種] 可重新訂閱。`
-      });
-    } else {
-      return client.replyMessage(event.replyToken, {
-        type: 'text',
-        text: `✅ 已取消 ${coin.toUpperCase()} 新聞推播訂閱。\n\n當前訂閱: ${updatedSubscriptions.map(c => c.toUpperCase()).join(', ')}\n\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
-      });
-    }
-  } else {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `❌ 取消訂閱失敗，請稍後再試。`
-    });
-  }
-}
 
 /**
  * 處理幫助指令
@@ -231,11 +131,6 @@ async function handleHelpCommand(event) {
      📊 查詢價格：
      直接輸入幣種代號 (${config.supportedCoins.slice(0, 5).join(', ')}...)
 
-    📰 訂閱功能：
-    /subscribe [幣種] - 訂閱特定幣種新聞
-    /unsubscribe [幣種] - 取消特定幣種訂閱
-    /unsubscribe - 取消所有訂閱
-
      📈 市場功能：
      /market - 全球市場總覽 (包含恐懼貪婪指數)
      /trending - 趨勢幣種
@@ -244,7 +139,6 @@ async function handleHelpCommand(event) {
 
      ℹ️ 其他指令：
      /help - 顯示此說明
-     /status - 查看訂閱狀態
 
      支援的加密貨幣 (市值前30大)：
      ${config.supportedCoins.join(', ')}`;
@@ -255,26 +149,6 @@ async function handleHelpCommand(event) {
   });
 }
 
-/**
- * 處理狀態查詢指令
- * @param {Object} event - LINE 事件
- * @param {string} userId - 用戶 ID
- */
-async function handleStatusCommand(event, userId) {
-  const coins = subscriptionService.getSubscriptions(userId);
-  
-  if (coins.length > 0) {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: `📊 您的訂閱狀態：\n✅ 已訂閱 ${coins.map(c => c.toUpperCase()).join(', ')} 新聞推播\n\n每天早上 9:00 會收到最新消息。\n使用 /unsubscribe [幣種] 可取消特定幣種訂閱。`
-    });
-  } else {
-    return client.replyMessage(event.replyToken, {
-      type: 'text',
-      text: '📊 您的訂閱狀態：\n❌ 目前沒有訂閱任何新聞推播\n\n使用 /subscribe [幣種] 可訂閱特定幣種的新聞。'
-    });
-  }
-}
 
 /**
  * 處理加密貨幣查詢
@@ -507,7 +381,7 @@ async function handleNewsCommand(event) {
     const news = await newsService.getTopCryptoNews(5);
     const newsText = newsService.formatNewsMessage(news);
     
-    const message = `📰 今日熱門加密貨幣新聞\n\n${newsText}\n\n🔔 訂閱幣種新聞功能\n\n想要定期收到特定幣種的新聞嗎？\n\n• 使用 /subscribe [幣種] 訂閱特定幣種新聞\n• 使用 /unsubscribe [幣種] 取消特定幣種訂閱\n• 使用 /unsubscribe 取消所有訂閱\n• 使用 /status 查看當前訂閱狀態\n\n每天早上 9:00 會自動推播您訂閱的幣種新聞！`;
+    const message = `📰 今日熱門加密貨幣新聞\n\n${newsText}`;
     
     return client.replyMessage(event.replyToken, {
       type: 'text',
@@ -564,59 +438,69 @@ async function handleSignalCommand(event, messageText) {
 
 
 /**
- * 推播訊息給所有訂閱用戶
- * @param {string} coin - 加密貨幣代號
+ * 推播每日新聞摘要給所有活躍用戶
  * @param {Array} news - 新聞陣列
  */
-async function broadcastNewsToSubscribers(coin, news) {
-  const subscribers = subscriptionService.getSubscribersForCoin(coin.toLowerCase());
-  
-  if (subscribers.length === 0) {
-    return;
-  }
-  
-  const newsText = formatNewsMessage(news);
-  const message = `🌅 早安！${coin.toUpperCase()} 新聞摘要\n\n${newsText}`;
-  
-  for (const userId of subscribers) {
-    try {
-      await client.pushMessage(userId, {
-        type: 'text',
-        text: message
-      });
-    } catch (error) {
-      console.error(`推播給用戶 ${userId} 失敗:`, error);
+async function broadcastDailyNews(news) {
+  try {
+    if (!news || news.length === 0) {
+      console.log('沒有新聞可推播');
+      return;
     }
+
+    if (activeUsers.size === 0) {
+      console.log('沒有活躍用戶，跳過新聞推播');
+      return;
+    }
+
+    // 格式化新聞訊息
+    const newsText = formatNewsMessage(news);
+    const message = `🌅 早安！今日加密貨幣新聞摘要\n\n${newsText}\n\n💡 使用 /news 可隨時查看最新新聞`;
+
+    console.log(`開始推播新聞給 ${activeUsers.size} 個活躍用戶...`);
+
+    // 推播給所有活躍用戶
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of activeUsers) {
+      try {
+        await client.pushMessage(userId, {
+          type: 'text',
+          text: message
+        });
+        successCount++;
+        console.log(`✅ 成功推播給用戶: ${userId}`);
+      } catch (error) {
+        failCount++;
+        console.error(`❌ 推播給用戶 ${userId} 失敗:`, error.message);
+        
+        // 如果用戶封鎖了 Bot 或帳號不存在，從列表中移除
+        if (error.statusCode === 403 || error.statusCode === 400) {
+          activeUsers.delete(userId);
+          console.log(`🗑️ 已移除無效用戶: ${userId}`);
+        }
+      }
+    }
+
+    console.log(`📊 新聞推播完成: 成功 ${successCount} 個，失敗 ${failCount} 個`);
+  } catch (error) {
+    console.error('推播每日新聞失敗:', error);
   }
 }
 
 /**
- * 推播每日新聞摘要給所有用戶
- * @param {Array} news - 新聞陣列
+ * 獲取活躍用戶統計
+ * @returns {Object} 用戶統計資訊
  */
-async function broadcastDailyNews(news) {
-  const allUsers = Array.from(userSubscriptions.keys());
-  
-  if (allUsers.length === 0) {
-    return;
-  }
-  
-  const newsText = formatNewsMessage(news);
-  const message = `🌅 早安！今日加密貨幣新聞摘要\n\n${newsText}`;
-  
-  for (const userId of allUsers) {
-    try {
-      await client.pushMessage(userId, {
-        type: 'text',
-        text: message
-      });
-    } catch (error) {
-      console.error(`推播給用戶 ${userId} 失敗:`, error);
-    }
-  }
+function getActiveUsersStats() {
+  return {
+    totalUsers: activeUsers.size,
+    users: Array.from(activeUsers)
+  };
 }
 
 // 匯出 router 和函數供排程器使用
 module.exports = router;
-module.exports.broadcastNewsToSubscribers = broadcastNewsToSubscribers;
 module.exports.broadcastDailyNews = broadcastDailyNews;
+module.exports.getActiveUsersStats = getActiveUsersStats;

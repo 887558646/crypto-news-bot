@@ -5,8 +5,7 @@ const webhookRouter = require('./routes/webhook');
 const scheduler = require('./utils/scheduler');
 const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
-const { broadcastDailyNews } = require('./routes/webhook'); // 引入 broadcastDailyNews
-const subscriptionService = require('./services/subscriptionService');
+const { broadcastDailyNews, getActiveUsersStats } = require('./routes/webhook'); // 引入 broadcastDailyNews
 
 const app = express();
 
@@ -26,7 +25,7 @@ app.get('/', (req, res) => {
 
 // 狀態檢查路由
 app.get('/status', (req, res) => {
-  const schedulerStatus = scheduler.getSchedulerStatus();
+  const schedulerStatus = scheduler.getStatus();
   res.status(200).json({
     bot: {
       name: 'Crypto News Bot',
@@ -35,7 +34,7 @@ app.get('/status', (req, res) => {
       uptime: process.uptime(),
     },
     scheduler: schedulerStatus,
-    subscriptions: subscriptionService.getStats(),
+    activeUsers: getActiveUsersStats(),
     apiKeys: {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',

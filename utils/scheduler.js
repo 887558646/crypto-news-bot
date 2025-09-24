@@ -2,7 +2,6 @@ const cron = require('node-cron');
 const config = require('../config');
 const newsService = require('../services/newsService');
 const priceService = require('../services/priceService');
-const subscriptionService = require('../services/subscriptionService');
 
 class Scheduler {
   constructor() {
@@ -38,13 +37,6 @@ class Scheduler {
       timezone: 'Asia/Taipei'
     });
 
-    // 每小時推播特定幣種新聞（如果有訂閱用戶）(UTC+8)
-    cron.schedule(config.schedule.specificNewsTime, async () => {
-      console.log('檢查特定幣種新聞推播...');
-      await this.broadcastSpecificCoinNews();
-    }, {
-      timezone: 'Asia/Taipei'
-    });
 
     // 每天 18:00 推播市場總結 (UTC+8)
     cron.schedule(config.schedule.marketSummaryTime, async () => {
@@ -91,60 +83,12 @@ class Scheduler {
     }
   }
 
-  /**
-   * 推播特定幣種新聞
-   */
-  async broadcastSpecificCoinNews() {
-    try {
-      const allSubscriptions = subscriptionService.getAllSubscriptions();
-      
-      if (allSubscriptions.size === 0) {
-        console.log('沒有訂閱用戶，跳過特定幣種新聞推播');
-        return;
-      }
-
-      // 獲取所有訂閱的幣種
-      const subscribedCoins = new Set();
-      for (const [userId, coins] of allSubscriptions) {
-        if (Array.isArray(coins)) {
-          coins.forEach(coin => subscribedCoins.add(coin));
-        } else {
-          // 向後兼容舊格式
-          subscribedCoins.add(coins);
-        }
-      }
-
-      // 為每個訂閱的幣種推播新聞
-      for (const coin of subscribedCoins) {
-        try {
-          console.log(`獲取 ${coin.toUpperCase()} 新聞...`);
-          const news = await newsService.getCryptoNews(coin, 2);
-          
-          if (news && news.length > 0) {
-            console.log(`推播 ${coin.toUpperCase()} 新聞給訂閱用戶`);
-            await this.webhookModule.broadcastNewsToSubscribers(coin, news);
-          }
-        } catch (error) {
-          console.error(`推播 ${coin.toUpperCase()} 新聞失敗:`, error);
-        }
-      }
-    } catch (error) {
-      console.error('推播特定幣種新聞失敗:', error);
-    }
-  }
 
   /**
    * 推播市場總結
    */
   async broadcastMarketSummary() {
     try {
-      const userSubscriptions = this.webhookModule.userSubscriptions;
-      
-      if (userSubscriptions.size === 0) {
-        console.log('沒有訂閱用戶，跳過市場總結推播');
-        return;
-      }
-
       console.log('獲取市場總結...');
       
       // 獲取主要幣種價格
@@ -154,20 +98,7 @@ class Scheduler {
       // 格式化市場總結
       const summaryText = this.formatMarketSummary(prices);
       
-      // 推播給所有用戶
-      const allUsers = Array.from(userSubscriptions.keys());
-      for (const userId of allUsers) {
-        try {
-          await this.webhookModule.client.pushMessage(userId, {
-            type: 'text',
-            text: summaryText
-          });
-        } catch (error) {
-          console.error(`推播市場總結給用戶 ${userId} 失敗:`, error);
-        }
-      }
-      
-      console.log('市場總結推播完成');
+      console.log('市場總結推播完成（由於移除了訂閱功能，此功能暫時停用）');
     } catch (error) {
       console.error('推播市場總結失敗:', error);
     }
@@ -203,13 +134,6 @@ class Scheduler {
     await this.broadcastDailyNews();
   }
 
-  /**
-   * 手動觸發特定幣種新聞推播（用於測試）
-   */
-  async triggerSpecificCoinNews() {
-    console.log('手動觸發特定幣種新聞推播...');
-    await this.broadcastSpecificCoinNews();
-  }
 
   /**
    * 手動觸發市場總結推播（用於測試）
@@ -232,12 +156,6 @@ class Scheduler {
           schedule: config.schedule.newsPushTime,
           timezone: 'Asia/Taipei (UTC+8)',
           description: '每天早上 9:00 推播加密貨幣新聞摘要'
-        },
-        {
-          name: '特定幣種新聞推播',
-          schedule: '0 * * * *',
-          timezone: 'Asia/Taipei (UTC+8)',
-          description: '每小時推播訂閱用戶的特定幣種新聞'
         },
         {
           name: '市場總結推播',
