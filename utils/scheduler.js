@@ -29,22 +29,34 @@ class Scheduler {
 
     console.log('啟動排程器...');
 
-    // 每天早上 08:00 推播每日新聞摘要 (UTC+8)
-    cron.schedule(config.schedule.newsPushTime, async () => {
-      console.log('開始執行每日新聞推播...');
-      await this.broadcastDailyNews();
-    }, {
-      timezone: 'Asia/Taipei'
-    });
+    // 檢查是否為 Render 免費版環境
+    const isRenderFree = process.env.RENDER && !process.env.RENDER_PAID;
+    
+    if (isRenderFree) {
+      console.log('⚠️ 檢測到 Render 免費版環境，使用外部觸發模式');
+      console.log('📋 請設置外部 cron 服務來觸發定時任務：');
+      console.log('   - 每日新聞: POST /trigger/daily-news');
+      console.log('   - 市場總結: POST /trigger/market-summary');
+      console.log('   - 時間: 08:00 UTC+8 和 18:00 UTC+8');
+    } else {
+      console.log('✅ 使用內建 cron 定時任務');
+      
+      // 每天早上 08:00 推播每日新聞摘要 (UTC+8)
+      cron.schedule(config.schedule.newsPushTime, async () => {
+        console.log('開始執行每日新聞推播...');
+        await this.broadcastDailyNews();
+      }, {
+        timezone: 'Asia/Taipei'
+      });
 
-
-    // 每天 18:00 推播市場總結 (UTC+8)
-    cron.schedule(config.schedule.marketSummaryTime, async () => {
-      console.log('開始執行市場總結推播...');
-      await this.broadcastMarketSummary();
-    }, {
-      timezone: 'Asia/Taipei'
-    });
+      // 每天 18:00 推播市場總結 (UTC+8)
+      cron.schedule(config.schedule.marketSummaryTime, async () => {
+        console.log('開始執行市場總結推播...');
+        await this.broadcastMarketSummary();
+      }, {
+        timezone: 'Asia/Taipei'
+      });
+    }
 
     this.isRunning = true;
     console.log('排程器已啟動');

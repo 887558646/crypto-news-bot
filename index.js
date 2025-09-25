@@ -7,6 +7,7 @@ const newsService = require('./services/newsService');
 const priceService = require('./services/priceService');
 const { getActiveUsersStats } = require('./routes/webhook');
 const mappingService = require('./services/mappingService');
+const keepAliveService = require('./services/keepAliveService');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.get('/status', (req, res) => {
     scheduler: schedulerStatus,
     activeUsers: getActiveUsersStats(),
     mappingCache: mappingService.getCacheStats(),
+    keepAlive: keepAliveService.getStatus(),
     apiKeys: {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',
@@ -96,6 +98,50 @@ app.post('/test', async (req, res) => {
 // LINE Webhook 路由
 app.use(config.server.webhookPath, webhookRouter);
 
+// Keep-Alive 端點 - 防止 Render 免費版睡眠
+app.get('/keepalive', (req, res) => {
+  res.json({ 
+    status: 'alive', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 外部定時任務觸發端點
+app.post('/trigger/:task', async (req, res) => {
+  const { task } = req.params;
+  const { secret } = req.body;
+  
+  // 簡單的認證機制
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  try {
+    let message = '';
+    
+    switch (task) {
+      case 'daily-news':
+        console.log('外部觸發每日新聞推播...');
+        await scheduler.triggerDailyNews();
+        message = '每日新聞推播已觸發';
+        break;
+      case 'market-summary':
+        console.log('外部觸發市場總結推播...');
+        await scheduler.triggerMarketSummary();
+        message = '市場總結推播已觸發';
+        break;
+      default:
+        return res.status(400).json({ error: '無效的任務類型' });
+    }
+    
+    res.json({ success: true, message });
+  } catch (error) {
+    console.error('外部觸發任務失敗:', error);
+    res.status(500).json({ error: '任務執行失敗', details: error.message });
+  }
+});
+
 // 錯誤處理中間件
 app.use((err, req, res, next) => {
   console.error('伺服器錯誤:', err);
@@ -123,7 +169,15 @@ app.listen(PORT, () => {
   console.log(`🔗 Webhook 端點: http://localhost:${PORT}${config.server.webhookPath}`);
   console.log(`📊 狀態檢查: http://localhost:${PORT}/status`);
   console.log(`🧪 測試端點: http://localhost:${PORT}/test`);
+  console.log(`💓 Keep-Alive 端點: http://localhost:${PORT}/keepalive`);
+  console.log(`⚡ 外部觸發端點: http://localhost:${PORT}/trigger/:task`);
   console.log('⏰ 排程器將在啟動後開始運行');
   scheduler.init(webhookRouter);
+  
+  // 啟動 Keep-Alive 服務（僅在生產環境）
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+    keepAliveService.start();
+  }
+  
   console.log('✅ 所有服務已就緒！');
 });
