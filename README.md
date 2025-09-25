@@ -46,6 +46,7 @@ crypto-news-bot/
 ├── package.json          # 專案依賴
 ├── README.md             # 專案說明
 ├── .env                  # 環境變數配置
+├── cron-setup.md         # 外部 Cron 設定指南
 ├── services/             # 服務層
 │   ├── newsService.js    # 新聞服務
 │   ├── backupNewsService.js # 備用新聞服務
@@ -53,7 +54,8 @@ crypto-news-bot/
 │   ├── marketService.js  # 市場分析服務
 │   ├── signalService.js  # 技術分析服務
 │   ├── infoService.js    # 幣種資訊服務
-│   └── mappingService.js # 動態映射服務
+│   ├── mappingService.js # 動態映射服務
+│   └── keepAliveService.js # Keep-Alive 服務
 ├── routes/               # 路由層
 │   └── webhook.js        # LINE webhook 處理
 └── utils/                # 工具層
@@ -86,9 +88,19 @@ LINE_CHANNEL_SECRET=your_line_channel_secret
 # NewsAPI 配置
 NEWS_API_KEY=your_news_api_key
 
+# NewsData.io 配置 (備用新聞源)
+NEWSDATA_API_KEY=your_newsdata_api_key
+
+# CoinGecko API 配置 (可選，免費版無需 API Key)
+COINGECKO_API_KEY=your_coingecko_api_key
+
 # 伺服器配置
 PORT=3000
 NODE_ENV=development
+
+# Render 免費版配置 (生產環境)
+CRON_SECRET=your-secure-secret-key
+KEEPALIVE_URL=https://your-app-name.onrender.com/keepalive
 ```
 
 ### 4. 啟動服務
@@ -185,13 +197,32 @@ GET /
 GET /status
 ```
 
+### Keep-Alive 端點
+```
+GET /keepalive
+```
+
+### 外部觸發端點
+```
+POST /trigger/:task
+Content-Type: application/json
+
+{
+  "secret": "your-cron-secret"
+}
+```
+
+支援的任務類型：
+- `daily-news` - 每日新聞推播
+- `market-summary` - 市場總結推播
+
 ### 測試推播
 ```
 POST /test
 Content-Type: application/json
 
 {
-  "type": "daily-news" | "specific-news" | "market-summary"
+  "type": "daily-news" | "market-summary" | "test-mapping"
 }
 ```
 
@@ -217,6 +248,24 @@ POST /webhook
 4. 設定環境變數
 5. 部署完成後設定 LINE Webhook URL
 
+#### Render 免費版特殊配置
+
+由於 Render 免費版會在 15 分鐘無活動後進入睡眠模式，需要額外配置：
+
+**環境變數設定**：
+```env
+CRON_SECRET=your-secure-secret-key
+KEEPALIVE_URL=https://your-app-name.onrender.com/keepalive
+```
+
+**外部 Cron 服務設定**：
+- 使用 [cron-job.org](https://cron-job.org) 或其他 Cron 服務
+- 設定每日新聞推播：`POST /trigger/daily-news` (08:00 UTC+8)
+- 設定市場總結：`POST /trigger/market-summary` (18:00 UTC+8)
+- 設定 Keep-Alive：`GET /keepalive` (每 5-10 分鐘)
+
+詳細設定指南請參考 `cron-setup.md` 檔案。
+
 ### Railway 部署
 
 1. 將專案推送到 GitHub
@@ -237,6 +286,11 @@ POST /webhook
 1. 前往 [NewsAPI](https://newsapi.org/)
 2. 註冊帳號並申請 API Key
 3. 免費版本每天 1000 次請求
+
+### NewsData.io (備用新聞源)
+1. 前往 [NewsData.io](https://newsdata.io/)
+2. 註冊帳號並申請 API Key
+3. 免費版本每天 200 次請求
 
 ### CoinGecko API
 - 免費使用，無需申請 API Key
@@ -272,6 +326,7 @@ POST /webhook
 ### API 狀態監控
 - **CoinGecko API**: ⚠️ 免費版速率限制
 - **NewsAPI**: ✅ 正常運作
+- **NewsData.io API**: ✅ 正常運作 (備用新聞源)
 - **Alternative.me API**: ✅ 正常運作
 
 ### 日誌查看
@@ -285,6 +340,24 @@ npm run dev
 ```
 
 ## 📝 更新日誌
+
+### v2.5.0 (2025-09-25)
+- 🚀 **重大新功能**:
+  - 新增 Render 免費版睡眠模式解決方案
+  - 新增 Keep-Alive 服務防止應用睡眠
+  - 新增外部觸發端點支援外部 Cron 服務
+  - 新增 `keepAliveService.js` 和 `cron-setup.md` 設定指南
+
+- 🔧 **技術改進**:
+  - 優化排程器檢測 Render 免費版環境
+  - 新增 `/keepalive` 和 `/trigger/:task` API 端點
+  - 改善環境變數配置和部署指南
+  - 新增外部 Cron 服務整合支援
+
+- 📊 **部署優化**:
+  - 支援 Render 免費版自動睡眠模式
+  - 提供完整的外部 Cron 設定指南
+  - 改善生產環境穩定性
 
 ### v2.4.0 (2025-09-24)
 - 🚀 **重大新功能**:
@@ -360,4 +433,4 @@ MIT License
 
 ---
 
-**最後更新**: 2025-09-23
+**最後更新**: 2025-09-25
