@@ -4,6 +4,7 @@ const config = require('./config');
 const webhookRouter = require('./routes/webhook');
 const { getActiveUsersStats } = require('./routes/webhook');
 const mappingService = require('./services/mappingService');
+const keepAliveService = require('./services/keepAliveService');
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get('/status', (req, res) => {
     },
     activeUsers: getActiveUsersStats(),
     mappingCache: mappingService.getCacheStats(),
+    keepAlive: keepAliveService.getStatus(),
     apiKeys: {
       newsApi: config.news.apiKey ? 'configured' : 'not configured',
       line: config.line.channelAccessToken && config.line.channelSecret ? 'configured' : 'not configured',
@@ -62,6 +64,15 @@ app.post('/test', async (req, res) => {
     console.error('測試失敗:', error);
     res.status(500).json({ error: '測試失敗', details: error.message });
   }
+});
+
+// Keep-Alive 端點 - 防止 Render 免費版睡眠
+app.get('/keepalive', (req, res) => {
+  res.json({ 
+    status: 'alive', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // LINE Webhook 路由
@@ -95,5 +106,12 @@ app.listen(PORT, () => {
   console.log(`🔗 Webhook 端點: http://localhost:${PORT}${config.server.webhookPath}`);
   console.log(`📊 狀態檢查: http://localhost:${PORT}/status`);
   console.log(`🧪 測試端點: http://localhost:${PORT}/test`);
+  console.log(`💓 Keep-Alive 端點: http://localhost:${PORT}/keepalive`);
+  
+  // 啟動 Keep-Alive 服務（僅在生產環境或 Render 環境）
+  if (process.env.NODE_ENV === 'production' || process.env.RENDER) {
+    keepAliveService.start();
+  }
+  
   console.log('✅ 所有服務已就緒！');
 });

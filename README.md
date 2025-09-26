@@ -50,7 +50,8 @@ crypto-news-bot/
 │   ├── marketService.js  # 市場分析服務
 │   ├── signalService.js  # 技術分析服務
 │   ├── infoService.js    # 幣種資訊服務
-│   └── mappingService.js # 動態映射服務
+│   ├── mappingService.js # 動態映射服務
+│   └── keepAliveService.js # Keep-Alive 服務
 └── routes/               # 路由層
     └── webhook.js        # LINE webhook 處理
 ```
@@ -90,6 +91,9 @@ COINGECKO_API_KEY=your_coingecko_api_key
 # 伺服器配置
 PORT=3000
 NODE_ENV=development
+
+# Keep-Alive 配置 (生產環境)
+KEEPALIVE_URL=https://your-app-name.onrender.com/keepalive
 ```
 
 ### 4. 啟動服務
@@ -186,6 +190,11 @@ GET /
 GET /status
 ```
 
+### Keep-Alive 端點
+```
+GET /keepalive
+```
+
 ### 測試端點
 ```
 POST /test
@@ -211,6 +220,23 @@ POST /webhook
 3. 連接 GitHub 儲存庫
 4. 設定環境變數
 5. 部署完成後設定 LINE Webhook URL
+
+#### Render 免費版 Keep-Alive 配置
+
+由於 Render 免費版會在 15 分鐘無活動後進入睡眠模式，建議設定 Keep-Alive 服務：
+
+**環境變數設定**：
+```env
+KEEPALIVE_URL=https://your-app-name.onrender.com/keepalive
+```
+
+**外部 Keep-Alive 服務設定**：
+- 使用 [UptimeRobot](https://uptimerobot.com) 或其他監控服務
+- 設定監控 URL：`https://your-app-name.onrender.com/keepalive`
+- 監控間隔：每 5-10 分鐘
+- 超時設定：30 秒
+
+這樣可以防止 Render 免費版進入睡眠模式，確保 Bot 隨時響應用戶請求。
 
 ### Railway 部署
 
@@ -284,18 +310,28 @@ npm run dev
 
 ## 📝 更新日誌
 
+### v2.6.1 (2025-09-25)
+- ✅ **功能恢復**:
+  - 重新添加 Keep-Alive 服務
+  - 防止 Render 免費版睡眠模式
+  - 保持系統即時響應能力
+
+- 🔧 **技術改進**:
+  - 新增 `services/keepAliveService.js` Keep-Alive 服務
+  - 新增 `/keepalive` API 端點
+  - 支援外部監控服務整合
+  - 優化生產環境穩定性
+
 ### v2.6.0 (2025-09-25)
 - 🗑️ **功能移除**:
   - 移除自動推播功能
   - 移除定時任務排程器
-  - 移除 Keep-Alive 服務
   - 移除外部觸發端點
   - 簡化系統架構，專注於即時查詢功能
 
 - 🔧 **技術改進**:
   - 移除 `node-cron` 依賴
   - 移除 `utils/scheduler.js` 排程器
-  - 移除 `services/keepAliveService.js`
   - 移除 `cron-setup.md` 設定指南
   - 簡化 API 端點和配置
 
