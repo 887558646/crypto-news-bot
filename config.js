@@ -26,8 +26,4 @@ module.exports = {
     port: process.env.PORT || 3000,
     webhookPath: '/webhook',
   },
-  schedule: {
-    newsPushTime: '0 8 * * *', // 每天早上 08:00
-    marketSummaryTime: '0 18 * * *', // 每天 18:00
-  },
 };

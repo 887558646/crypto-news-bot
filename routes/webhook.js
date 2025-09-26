@@ -17,12 +17,9 @@ const lineConfig = {
 
 const client = new line.Client(lineConfig);
 
-// 簡單的用戶列表管理（用於新聞推播）
+// 簡單的用戶列表管理
 const activeUsers = new Set();
 
-// 防重複推播機制
-let lastBroadcastTime = 0;
-const BROADCAST_COOLDOWN = 30 * 60 * 1000; // 30分鐘冷卻時間
 
 
 /**
@@ -437,77 +434,6 @@ async function handleSignalCommand(event, messageText) {
 
 
 
-/**
- * 推播每日新聞摘要給所有用戶
- * @param {Array} news - 新聞陣列
- */
-async function broadcastDailyNews(news) {
-  try {
-    if (!news || news.length === 0) {
-      console.log('沒有新聞可推播');
-      return;
-    }
-
-    // 檢查是否在冷卻時間內
-    const now = Date.now();
-    const timeSinceLastBroadcast = now - lastBroadcastTime;
-    console.log(`上次推播時間: ${new Date(lastBroadcastTime).toLocaleString()}, 距離現在: ${Math.round(timeSinceLastBroadcast / 1000)}秒`);
-    
-    if (timeSinceLastBroadcast < BROADCAST_COOLDOWN) {
-      console.log(`推播冷卻時間內，跳過重複推播 (還需等待 ${Math.round((BROADCAST_COOLDOWN - timeSinceLastBroadcast) / 1000)}秒)`);
-      return;
-    }
-
-    // 格式化新聞訊息
-    const newsText = formatNewsMessage(news);
-    const message = `🌅 早安！今日最新加密貨幣新聞\n\n${newsText}\n\n💡 /news 可隨時查看最新新聞`;
-
-    console.log('開始推播新聞給所有用戶...');
-
-    // 推播給所有用戶（使用廣播功能）
-    try {
-      await client.broadcast({
-        type: 'text',
-        text: message
-      });
-      lastBroadcastTime = now;
-      console.log('✅ 新聞推播完成');
-    } catch (error) {
-      console.error('❌ 新聞推播失敗:', error.message);
-      
-      // 如果廣播失敗，嘗試推播給活躍用戶作為備用方案
-      if (activeUsers.size > 0) {
-        console.log(`嘗試推播給 ${activeUsers.size} 個活躍用戶作為備用方案...`);
-        let successCount = 0;
-        let failCount = 0;
-
-        for (const userId of activeUsers) {
-          try {
-            await client.pushMessage(userId, {
-              type: 'text',
-              text: message
-            });
-            successCount++;
-            console.log(`✅ 成功推播給用戶: ${userId}`);
-          } catch (pushError) {
-            failCount++;
-            console.error(`❌ 推播給用戶 ${userId} 失敗:`, pushError.message);
-            
-            // 如果用戶封鎖了 Bot 或帳號不存在，從列表中移除
-            if (pushError.statusCode === 403 || pushError.statusCode === 400) {
-              activeUsers.delete(userId);
-              console.log(`🗑️ 已移除無效用戶: ${userId}`);
-            }
-          }
-        }
-
-        console.log(`📊 備用推播完成: 成功 ${successCount} 個，失敗 ${failCount} 個`);
-      }
-    }
-  } catch (error) {
-    console.error('推播每日新聞失敗:', error);
-  }
-}
 
 /**
  * 獲取活躍用戶統計
@@ -520,7 +446,6 @@ function getActiveUsersStats() {
   };
 }
 
-// 匯出 router 和函數供排程器使用
+// 匯出 router 和函數
 module.exports = router;
-module.exports.broadcastDailyNews = broadcastDailyNews;
 module.exports.getActiveUsersStats = getActiveUsersStats;
