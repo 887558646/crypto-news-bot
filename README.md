@@ -403,10 +403,6 @@ npm run dev
 
 MIT License
 
-## 🤝 貢獻
-
-歡迎提交 Issue 和 Pull Request！
-
 ---
 
 **最後更新**: 2025-09-25
